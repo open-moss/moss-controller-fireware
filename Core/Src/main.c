@@ -29,7 +29,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stdio.h"
+#include "stdlib.h"
+#include "stdarg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +63,47 @@ void MX_FREERTOS_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int fputc(int c, FILE *f)
+{
+    uint8_t temp[1] = {c};
+    HAL_UART_Transmit(&huart2, temp, 1, 100);
+    return c;
+}
 
+void Debug_Printf(const char *format, const char name[17], uint32_t line, ...)
+{
+    va_list ap;
+    va_start(ap, line);
+    if (name != NULL && line != NULL)
+        printf("[%s:%d]: ", name, line);
+    vprintf(format, ap);
+    printf("\n");
+    va_end(ap);
+}
+
+void Debug_Printf_ISR(const char *format, const char name[17], uint32_t line, ...)
+{
+    va_list ap;
+    va_start(ap, line);
+    if (name != NULL && line != NULL)
+        printf("[%s:%d]: ", name, line);
+    vprintf(format, ap);
+    printf("\n");
+    va_end(ap);
+}
+
+void Debug_HEX_Print(uint8_t *buff, uint32_t size, const char name[17], uint32_t line)
+{
+    if (name != NULL && line != NULL)
+        printf("[%s:%d]: ", name, line);
+    for (uint32_t i = 0; i < size; i++)
+    {
+        printf("%02X", buff[i]);
+        if (i < size - 1)
+            printf(" ");
+    }
+    printf("\n");
+}
 /* USER CODE END 0 */
 
 /**

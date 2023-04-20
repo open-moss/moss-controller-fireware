@@ -2,6 +2,17 @@
     "files.associations": {
         "freertos.h": "c",
         "config.h": "c",
-        "tmc5160.h": "c"
-    }
+        "tmc5160.h": "c",
+        "main.h": "c",
+        "spi.h": "c",
+        "cmsis_os.h": "c",
+        "task.h": "c",
+        "tmcstepper.h": "c",
+        "common.h": "c",
+        "common.hpp": "c",
+        "string.h": "c",
+        "config.hpp": "c",
+        "ios": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

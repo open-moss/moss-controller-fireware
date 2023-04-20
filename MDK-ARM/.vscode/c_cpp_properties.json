@@ -95,6 +95,8 @@
                 "__yield()=",
                 "__vfp_status(x,y)=0"
             ],
+            "cStandard": "c99",
+            "cppStandard": "c++11",
             "intelliSenseMode": "${default}"
         }
     ],

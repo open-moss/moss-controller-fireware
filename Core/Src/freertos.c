@@ -126,38 +126,6 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 
-int fputc(int c, FILE *f)
-{
-    uint8_t temp[1] = {c};
-    HAL_UART_Transmit(&huart2, temp, 1, 100);
-    return c;
-}
-
-void Debug_Printf(const char *format, const char name[17], uint32_t line, ...)
-{
-    va_list ap;
-    va_start(ap, line);
-    if (name != NULL && line != NULL)
-        printf("[%s:%d]: ", name, line);
-    vprintf(format, ap);
-    printf("\n");
-    va_end(ap);
-}
-
-void Debug_HEX_Print(uint8_t *buff, uint32_t size, const char name[17], uint32_t line)
-{
-    if (name != NULL && line != NULL)
-        printf("[%s:%d]: ", name, line);
-    for (uint32_t i = 0; i < size; i++)
-    {
-        printf("%02X", buff[i]);
-        if (i < size - 1)
-            printf(" ");
-    }
-    printf("\n");
-}
-
-
 void SendCmd(uint8_t address, uint32_t data) {
 	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 	while (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY);
@@ -183,22 +151,26 @@ void StartMainTask(void const * argument)
 
   /* Infinite loop */
 	
+  MOTOR* motor = new_MOTOR(X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
+  motor->test();
+
 	osDelay(3000);
 	SendCmd(TMC5160_CHOPCONF, 0x000100C3);
 	SendCmd(TMC5160_IHOLD_IRUN, 0x0006110E);
 	SendCmd(TMC5160_TPOWERDOWN, 0x0000000A);
+  SendCmd(TMC5160_TCOOLTHRS, 0x00000004);
+  SendCmd(TMC5160_TSTEP, 0x00000004);
 	SendCmd(TMC5160_GCONF, 0x00000004);
 	SendCmd(TMC5160_TPWMTHRS, 0x000001F4);  //对应切换速度
-	SendCmd(TMC5160_A1, 0x000003E8);  //第一阶段加速度
-	SendCmd(TMC5160_V1, 0x0000C350);  //加速度阈值速度
+	SendCmd(TMC5160_A1, 0x000003E8);  //第一阶段加�?�度
+	SendCmd(TMC5160_V1, 0x0000C350);  //加�?�度阈�?��?�度
 	SendCmd(TMC5160_AMAX, 0x000001F4);  //大于V1的加速度
-	SendCmd(TMC5160_VMAX, 0x00030D40);  //加速度阈值速度最大速度
+	SendCmd(TMC5160_VMAX, 0x00030D40);  //加�?�度阈�?��?�度�?大�?�度
 	SendCmd(TMC5160_DMAX, 0x000002BC);  //大于V1的减速度
 	SendCmd(TMC5160_D1, 0x00000578);  //小于V1的减速度
 	SendCmd(TMC5160_VSTOP, 0x0000000A);  //停止速度
 	SendCmd(TMC5160_RAMPMODE, 0x00000000);  //目标位置运动
-  SendCmd(TMC5160_XTARGET, 51200 * 20);  //运动角度
-	int i = 0;
+  SendCmd(TMC5160_XTARGET, 0);  //运动角度
   for(;;)
   {
 		// osDelay(500);

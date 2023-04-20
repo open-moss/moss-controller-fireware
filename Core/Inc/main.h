@@ -78,6 +78,10 @@ void Error_Handler(void);
 #define BODY_SENSOR_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
+void Debug_Printf(const char *format, const char name[17], uint32_t line, ...);
+void Debug_Printf_ISR(const char *format, const char name[17], uint32_t line, ...);
+void Debug_HEX_Print(uint8_t *buff, uint32_t size, const char name[17], uint32_t line);
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
