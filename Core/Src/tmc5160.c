@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "common.h"
 #include "tmc5160.h"
 
@@ -18,6 +19,6 @@ void delete_MOTOR(MOTOR* const pInstance) {
     free(pInstance);
 }
 
-void test() {
+void test(void) {
 
 }

@@ -12,7 +12,12 @@
         "common.hpp": "c",
         "string.h": "c",
         "config.hpp": "c",
-        "ios": "c"
+        "ios": "c",
+        "stm32f1xx_hal_i2c.h": "c",
+        "oled.h": "c",
+        "font_lib.h": "c",
+        "stdint.h": "c",
+        "i2c.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
