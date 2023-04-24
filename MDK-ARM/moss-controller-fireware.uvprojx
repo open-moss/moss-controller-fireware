@@ -453,11 +453,6 @@
               <FilePath>..\Core\Src\common.c</FilePath>
             </File>
             <File>
-              <FileName>tmc5160.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\tmc5160.c</FilePath>
-            </File>
-            <File>
               <FileName>oled.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\oled.c</FilePath>
@@ -466,6 +461,11 @@
               <FileName>font_lib.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Core\Src\font_lib.c</FilePath>
+            </File>
+            <File>
+              <FileName>motor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\motor.c</FilePath>
             </File>
           </Files>
         </Group>

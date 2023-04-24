@@ -1,21 +1,21 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * File Name          : freertos.c
-  * Description        : Code for freertos applications
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2023 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under Ultimate Liberty license
-  * SLA0044, the "License"; You may not use this file except in compliance with
-  * the License. You may obtain a copy of the License at:
-  *                             www.st.com/SLA0044
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * File Name          : freertos.c
+ * Description        : Code for freertos applications
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; Copyright (c) 2023 STMicroelectronics.
+ * All rights reserved.</center></h2>
+ *
+ * This software component is licensed by ST under Ultimate Liberty license
+ * SLA0044, the "License"; You may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at:
+ *                             www.st.com/SLA0044
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -34,7 +34,7 @@
 #include "stdlib.h"
 #include "stdarg.h"
 #include "string.h"
-#include "tmc5160.h"
+#include "motor.h"
 #include "oled.h"
 /* USER CODE END Includes */
 
@@ -64,18 +64,18 @@ osThreadId mainLoopWorkerHandle;
 
 /* USER CODE END FunctionPrototypes */
 
-void StartMainTask(void const * argument);
+void StartMainTask(void const *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize);
 
 /* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
 static StaticTask_t xIdleTaskTCBBuffer;
 static StackType_t xIdleStack[configMINIMAL_STACK_SIZE];
 
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
   *ppxIdleTaskTCBBuffer = &xIdleTaskTCBBuffer;
   *ppxIdleTaskStackBuffer = &xIdleStack[0];
@@ -85,11 +85,12 @@ void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackTy
 /* USER CODE END GET_IDLE_TASK_MEMORY */
 
 /**
-  * @brief  FreeRTOS initialization
-  * @param  None
-  * @retval None
-  */
-void MX_FREERTOS_Init(void) {
+ * @brief  FreeRTOS initialization
+ * @param  None
+ * @retval None
+ */
+void MX_FREERTOS_Init(void)
+{
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
@@ -118,99 +119,108 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
-
 }
 
 /* USER CODE BEGIN Header_StartMainTask */
 /**
-  * @brief  Function implementing the mainLoopWorker thread.
-  * @param  argument: Not used
-  * @retval None
-  */
+ * @brief  Function implementing the mainLoopWorker thread.
+ * @param  argument: Not used
+ * @retval None
+ */
 
-void SendCmd(uint8_t address, uint32_t data) {
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-	uint8_t tbuf[5];
-    tbuf[0] = address | 0x80;
-    tbuf[1] = 0xFF & (data>>24);
-    tbuf[2] = 0xFF & (data>>16);
-    tbuf[3] = 0xFF & (data>>8);
-    tbuf[4] = 0xFF & data;
-	uint8_t rxbuf[5];
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	HAL_SPI_TransmitReceive(&hspi1, tbuf, rxbuf, 5, 100);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-	Debug_HEX_Print((uint8_t *)rxbuf, sizeof(rxbuf), __FUNCTION__, __LINE__);
+void SendCmd(uint8_t address, uint32_t data)
+{
+  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY)
+    ;
+  uint8_t tbuf[5];
+  tbuf[0] = address | 0x80;
+  tbuf[1] = 0xFF & (data >> 24);
+  tbuf[2] = 0xFF & (data >> 16);
+  tbuf[3] = 0xFF & (data >> 8);
+  tbuf[4] = 0xFF & data;
+  uint8_t rxbuf[5];
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_SPI_TransmitReceive(&hspi1, tbuf, rxbuf, 5, 100);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  Debug_HEX_Print((uint8_t *)rxbuf, sizeof(rxbuf), __FUNCTION__, __LINE__);
 }
 
-void SendCmd2(uint8_t address, uint32_t data) {
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
-	while (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY);
-	uint8_t tbuf[5];
-    tbuf[0] = address | 0x80;
-    tbuf[1] = 0xFF & (data>>24);
-    tbuf[2] = 0xFF & (data>>16);
-    tbuf[3] = 0xFF & (data>>8);
-    tbuf[4] = 0xFF & data;
-	uint8_t rxbuf[5];
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
-	HAL_SPI_TransmitReceive(&hspi2, tbuf, rxbuf, 5, 100);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
-	Debug_HEX_Print((uint8_t *)rxbuf, sizeof(rxbuf), __FUNCTION__, __LINE__);
+void SendCmd2(uint8_t address, uint32_t data)
+{
+  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  while (HAL_SPI_GetState(&hspi2) != HAL_SPI_STATE_READY)
+    ;
+  uint8_t tbuf[5];
+  tbuf[0] = address | 0x80;
+  tbuf[1] = 0xFF & (data >> 24);
+  tbuf[2] = 0xFF & (data >> 16);
+  tbuf[3] = 0xFF & (data >> 8);
+  tbuf[4] = 0xFF & data;
+  uint8_t rxbuf[5];
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+  HAL_SPI_TransmitReceive(&hspi2, tbuf, rxbuf, 5, 100);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+  Debug_HEX_Print((uint8_t *)rxbuf, sizeof(rxbuf), __FUNCTION__, __LINE__);
 }
 
 /* USER CODE END Header_StartMainTask */
-void StartMainTask(void const * argument)
+void StartMainTask(void const *argument)
 {
   /* USER CODE BEGIN StartMainTask */
-	
-	Debug_Printf("Hello World", __FUNCTION__, __LINE__);
+
+  Debug_Printf("Hello World", __FUNCTION__, __LINE__);
 
   /* Infinite loop */
-	
-  MOTOR* motor = new_MOTOR(X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
-  motor->test();
 
-	osDelay(3000);
-	SendCmd(TMC5160_CHOPCONF, 0x000100C3);
-	SendCmd(TMC5160_IHOLD_IRUN, 0x0006110E);
-	SendCmd(TMC5160_TPOWERDOWN, 0x0000000A);
-  SendCmd(TMC5160_TCOOLTHRS, 0x00000004);
-  SendCmd(TMC5160_TSTEP, 0x00000004);
-	SendCmd(TMC5160_GCONF, 0x00000004);
-	SendCmd(TMC5160_TPWMTHRS, 0x000001F4);  //对应切换速度
-	SendCmd(TMC5160_A1, 0x000003E8);  //第一阶段加�?�度
-	SendCmd(TMC5160_V1, 0x0000C350);  //加�?�度阈�?��?�度
-	SendCmd(TMC5160_AMAX, 0x000001F4);  //大于V1的加速度
-	SendCmd(TMC5160_VMAX, 0x00030D40);  //加�?�度阈�?��?�度�?大�?�度
-	SendCmd(TMC5160_DMAX, 0x000002BC);  //大于V1的减速度
-	SendCmd(TMC5160_D1, 0x00000578);  //小于V1的减速度
-	SendCmd(TMC5160_VSTOP, 0x0000000A);  //停止速度
-	SendCmd(TMC5160_RAMPMODE, 0x00000000);  //目标位置运动
-  SendCmd(0xAD, 51200);
+  osDelay(1000);
 
-  SendCmd2(TMC5160_CHOPCONF, 0x000100C3);
-	SendCmd2(TMC5160_IHOLD_IRUN, 0x0006110E);
-	SendCmd2(TMC5160_TPOWERDOWN, 0x0000000A);
-  SendCmd2(TMC5160_TCOOLTHRS, 0x00000004);
-  SendCmd2(TMC5160_TSTEP, 0x00000004);
-	SendCmd2(TMC5160_GCONF, 0x00000004);
-	SendCmd2(TMC5160_TPWMTHRS, 0x000001F4);  //对应切换速度
-	SendCmd2(TMC5160_A1, 0x000003E8);  //第一阶段加�?�度
-	SendCmd2(TMC5160_V1, 0x0000C350);  //加�?�度阈�?��?�度
-	SendCmd2(TMC5160_AMAX, 0x000001F4);  //大于V1的加速度
-	SendCmd2(TMC5160_VMAX, 0x00030D40);  //加�?�度阈�?��?�度�?大�?�度
-	SendCmd2(TMC5160_DMAX, 0x000002BC);  //大于V1的减速度
-	SendCmd2(TMC5160_D1, 0x00000578);  //小于V1的减速度
-	SendCmd2(TMC5160_VSTOP, 0x0000000A);  //停止速度
-	SendCmd2(TMC5160_RAMPMODE, 0x00000000);  //目标位置运动
-  SendCmd2(0xAD, 51200);
+  MOTOR *xMotor = new_MOTOR(X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
+  xMotor->init(xMotor);
+
+  MOTOR *yMotor = new_MOTOR(Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
+  yMotor->init(yMotor);
+
+  // SendCmd(TMC5160_CHOPCONF, 0x000100C3);
+  // SendCmd(TMC5160_IHOLD_IRUN, 0x0006110E);
+  // SendCmd(TMC5160_TPOWERDOWN, 0x0000000A);
+  // SendCmd(TMC5160_TCOOLTHRS, 0x00000004);
+  // SendCmd(TMC5160_TSTEP, 0x00000004);
+  // SendCmd(TMC5160_GCONF, 0x00000004);
+  // SendCmd(TMC5160_TPWMTHRS, 0x000001F4);  //对应切换速度
+  // SendCmd(TMC5160_A1, 0x000003E8);  //第一阶段加�?�度
+  // SendCmd(TMC5160_V1, 0x0000C350);  //加�?�度阈�?��?�度
+  // SendCmd(TMC5160_AMAX, 0x000001F4);  //大于V1的加速度
+  // SendCmd(TMC5160_VMAX, 0x00030D40);  //加�?�度阈�?��?�度�?大�?�度
+  // SendCmd(TMC5160_DMAX, 0x000002BC);  //大于V1的减速度
+  // SendCmd(TMC5160_D1, 0x00000578);  //小于V1的减速度
+  // SendCmd(TMC5160_VSTOP, 0x0000000A);  //停止速度
+  // SendCmd(TMC5160_RAMPMODE, 0x00000000);  //目标位置运动
+  // SendCmd(0xAD, 0);
+
+  // SendCmd2(TMC5160_CHOPCONF, 0x000100C3);
+  // SendCmd2(TMC5160_IHOLD_IRUN, 0x0006110E);
+  // SendCmd2(TMC5160_TPOWERDOWN, 0x0000000A);
+  // SendCmd2(TMC5160_TCOOLTHRS, 0x00000004);
+  // SendCmd2(TMC5160_TSTEP, 0x00000004);
+  // SendCmd2(TMC5160_GCONF, 0x00000004);
+  // SendCmd2(TMC5160_TPWMTHRS, 0x000001F4);  //对应切换速度
+  // SendCmd2(TMC5160_A1, 0x000003E8);  //第一阶段加�?�度
+  // SendCmd2(TMC5160_V1, 0x0000C350);  //加�?�度阈�?��?�度
+  // SendCmd2(TMC5160_AMAX, 0x000001F4);  //大于V1的加速度
+  // SendCmd2(TMC5160_VMAX, 0x00030D40);  //加�?�度阈�?��?�度�?大�?�度
+  // SendCmd2(TMC5160_DMAX, 0x000002BC);  //大于V1的减速度
+  // SendCmd2(TMC5160_D1, 0x00000578);  //小于V1的减速度
+  // SendCmd2(TMC5160_VSTOP, 0x0000000A);  //停止速度
+  // SendCmd2(TMC5160_RAMPMODE, 0x00000000);  //目标位置运动
+  // SendCmd2(0xAD, 0);
 
   // osDelay(2000);
 
   OLED_Init(hi2c1);
   OLED_DrawStr(0, 0, "OpenMOSS");
+  osDelay(500);
+  OLED_Refresh();
   OLED_DrawStr(0, 10, "BOOT 0001.bin");
   OLED_Refresh();
   osDelay(1000);
@@ -224,14 +234,15 @@ void StartMainTask(void const * argument)
   OLED_Refresh();
   // SendCmd(0xAD, 512000 * 10);
   // SendCmd2(0xAD, 512000 * 10);
-  // uint32_t i = 0;
-  for(;;)
+
+  uint32_t i = 0;
+  for (;;)
   {
-		osDelay(1000);
-	  // SendCmd(0xAD, i);
-    // SendCmd2(0xAD, i);
-    // i += 10000;
-		printf("GOGOGO");
+    osDelay(10000);
+    xMotor->rotate(xMotor, i * 51200);
+    yMotor->rotate(yMotor, i * 51200);
+    i++;
+    printf("GOGOGO");
   }
   /* USER CODE END StartMainTask */
 }

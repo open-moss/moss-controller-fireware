@@ -67,16 +67,4 @@
 #define TMC5160_PWM_AUTO       0x72
 #define TMC5160_LOST_STEPS     0x73
 
-typedef struct _MOTOR {
-    void* pDriver;
-    GPIO_TypeDef* cs_gpio;
-    uint16_t cs_pin;
-    void (*test)();
-    void* delete;
-}MOTOR;
-
-MOTOR* new_MOTOR(GPIO_TypeDef* cs_gpio, uint16_t cs_pin);
-void delete_MOTOR(MOTOR* const pInstance);
-void test(void);
-
 #endif

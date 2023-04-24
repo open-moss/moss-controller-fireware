@@ -17,7 +17,9 @@
         "oled.h": "c",
         "font_lib.h": "c",
         "stdint.h": "c",
-        "i2c.h": "c"
+        "i2c.h": "c",
+        "motor.h": "c",
+        "xutility": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }
