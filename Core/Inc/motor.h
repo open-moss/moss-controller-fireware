@@ -1,8 +1,8 @@
-#include "common.h"
-#include "tmc5160.h"
-
 #ifndef MOTOR_H
 #define MOTOR_H
+
+#include "common.h"
+#include "tmc5160.h"
 
 typedef struct _MOTOR MOTOR;
 

@@ -1,8 +1,8 @@
-#include "common.h"
-#include "spi.h"
-
 #ifndef CONFIG_H
 #define CONFIG_H
+
+#include "common.h"
+#include "spi.h"
 
 /**
  * 系统配置
@@ -14,8 +14,14 @@
 /**
  * OLED屏幕配置 
  */
-#define OLED_IIC_CLOCK_SPEED 400  //I2C时钟周期（KHZ）
+#define OLED_WIDTH 128  //屏幕宽度（像素）
+#define OLED_HEIGHT 64  //屏幕高度（像素）
+#define OLED_CONTRAST 255  //屏幕对比度（0-255）
 #define OLED_INVERSE_COLOR FALSE  //是否反色显示
+#define OLED_ADDRESSING_MODE 1  //寻址模式 0 水平 1 垂直 2 复位
+#define OLED_HI2C hi2c1 //I2C句柄
+#define OLED_I2C_ADDRESS 0x78  //I2C设备地址
+#define OLED_I2C_CLOCK_SPEED 400  //I2C时钟周期（KHZ）
 
 /**
  * X轴电机配置
