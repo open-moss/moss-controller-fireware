@@ -133,7 +133,6 @@ void StartMainTask(void const *argument)
 {
   /* USER CODE BEGIN StartMainTask */
 
-  Debug_Printf("Hello World", __FUNCTION__, __LINE__);
 
   /* Infinite loop */
 
@@ -146,8 +145,10 @@ void StartMainTask(void const *argument)
   yMotor->init(yMotor);
 
   OLED_Handle *holed = OLED_Init(OLED_HI2C);
+  OLED_DrawStr(holed, 10, 10, "OpenMOSS");
   
 
+  Debug_Printf("Hello World", __FUNCTION__, __LINE__);
   // OLED_Init(hi2c1);
   // OLED_DrawStr(0, 0, "OpenMOSS");
   // osDelay(500);
@@ -169,7 +170,8 @@ void StartMainTask(void const *argument)
   // uint32_t i = 0;
   for (;;)
   {
-    osDelay(100);
+    osDelay(5000);
+    // Debug_Printf("Hello World!");
   }
   /* USER CODE END StartMainTask */
 }
