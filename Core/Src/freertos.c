@@ -55,21 +55,22 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+SemaphoreHandle_t printSemaphoreHandle = NULL;
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void MOTOR_HandleTask(void);
+void OLED_HandleTask(void);
 /* USER CODE END FunctionPrototypes */
 
-void StartMainTask(void const *argument);
+void StartMainTask(void const * argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /* GetIdleTaskMemory prototype (linked to static allocation support) */
-void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize);
+void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize );
 
 /* USER CODE BEGIN GET_IDLE_TASK_MEMORY */
 static StaticTask_t xIdleTaskTCBBuffer;
@@ -85,18 +86,17 @@ void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackTyp
 /* USER CODE END GET_IDLE_TASK_MEMORY */
 
 /**
- * @brief  FreeRTOS initialization
- * @param  None
- * @retval None
- */
-void MX_FREERTOS_Init(void)
-{
+  * @brief  FreeRTOS initialization
+  * @param  None
+  * @retval None
+  */
+void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
 
   /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
+  printSemaphoreHandle = xSemaphoreCreateMutex();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -119,6 +119,7 @@ void MX_FREERTOS_Init(void)
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
 }
 
 /* USER CODE BEGIN Header_StartMainTask */
@@ -129,56 +130,66 @@ void MX_FREERTOS_Init(void)
  */
 
 /* USER CODE END Header_StartMainTask */
-void StartMainTask(void const *argument)
+void StartMainTask(void const * argument)
 {
   /* USER CODE BEGIN StartMainTask */
 
 
   /* Infinite loop */
 
-  osDelay(1000);
+  osDelay(100);
 
-  MOTOR *xMotor = new_MOTOR(X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
-  xMotor->init(xMotor);
+  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
 
-  MOTOR *yMotor = new_MOTOR(Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
-  yMotor->init(yMotor);
+  while(createTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 256) != HAL_OK) {
+    DebugPrintf("MOTOR Handle Task Create Failed", __FUNCTION__, __LINE__);
+    osDelay(100);
+  }
 
-  OLED_Handle *holed = OLED_Init(OLED_HI2C);
-  OLED_DrawStr(holed, 10, 10, "OpenMOSS");
+
+  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
   
+  while(createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 768) != HAL_OK) {
+    DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
+    osDelay(100);
+  }
+  
+  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
 
-  Debug_Printf("Hello World", __FUNCTION__, __LINE__);
-  // OLED_Init(hi2c1);
-  // OLED_DrawStr(0, 0, "OpenMOSS");
-  // osDelay(500);
-  // OLED_Refresh();
-  // OLED_DrawStr(0, 10, "BOOT 0001.bin");
-  // OLED_Refresh();
-  // osDelay(1000);
-  // OLED_DrawStr(0, 20, "INIT 550W");
-  // OLED_Refresh();
-  // osDelay(2000);
-  // OLED_DrawStr(0, 30, "CHECK OK");
-  // OLED_Refresh();
-  // osDelay(500);
-  // OLED_DrawStr(0, 40, "CONNECTION...");
-  // OLED_Refresh();
-  // SendCmd(0xAD, 512000 * 10);
-  // SendCmd2(0xAD, 512000 * 10);
-
-  // uint32_t i = 0;
   for (;;)
   {
-    osDelay(5000);
-    // Debug_Printf("Hello World!");
+    osDelay(1000);
   }
   /* USER CODE END StartMainTask */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+void MOTOR_HandleTask()
+{
+  MOTOR *xMotor = new_MOTOR(X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
+  xMotor->init(xMotor);
+  MOTOR *yMotor = new_MOTOR(Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
+  yMotor->init(yMotor);
+  xMotor->rotate(xMotor, 51200 * 5);
+  yMotor->rotate(yMotor, 51200 * 5);
+  for (;;)
+  {
+    osDelay(100);
+  }
+}
 
+void OLED_HandleTask()
+{
+  OLED_Handle holed = OLED_Init(&OLED_HI2C);
+  OLED_DrawStr(&holed, 0, 10, "OpenMOSS");
+  OLED_DrawStr(&holed, 0, 20, "BOOT (FIREWARE.bin)");
+  OLED_Refresh(&holed);
+  for (;;)
+  {
+    osDelay(100);
+  }
+}
 /* USER CODE END Application */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

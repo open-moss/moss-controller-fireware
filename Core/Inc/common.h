@@ -1,11 +1,17 @@
 #ifndef COMMON_H
 #define COMMON_H
 #include "stm32f1xx_hal.h"
+#include "cmsis_os.h"
+
+void DebugPrintf(const char *format, const char name[17], uint32_t line, ...);
+void DebugPrintfISR(const char *format, const char name[17], uint32_t line, ...);
+void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t line);
 
 #define FALSE 0
 #define TRUE (!FALSE)
 typedef unsigned char BOOL;
 
-uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size);
+void PrintTaskList(void);
+HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, uint16_t stackSize);
 
 #endif

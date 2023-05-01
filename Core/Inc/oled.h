@@ -2,12 +2,8 @@
 #define OLED_H
 
 #include <string.h>
-
-#include "font_lib.h"
 #include "stm32f1xx_hal.h"
 #include "stm32f1xx_hal_i2c.h"
-
-
 
 #define CmdReg 0x00     //表示发送指令
 #define DataReg 0x40    //表示发送数据
@@ -25,8 +21,8 @@ typedef struct _OLED_Handle {
     uint8_t bufferFlag[128];  //刷新标志
 }OLED_Handle;
 
-OLED_Handle* OLED_Init(I2C_HandleTypeDef hi2c);
+OLED_Handle OLED_Init(I2C_HandleTypeDef* hi2c);
+HAL_StatusTypeDef OLED_Refresh(OLED_Handle* const holed);
 HAL_StatusTypeDef OLED_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str);
-
 
 #endif
