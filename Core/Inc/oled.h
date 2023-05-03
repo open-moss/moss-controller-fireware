@@ -23,6 +23,6 @@ typedef struct _OLED_Handle {
 
 OLED_Handle OLED_Init(I2C_HandleTypeDef* hi2c);
 HAL_StatusTypeDef OLED_Refresh(OLED_Handle* const holed);
-HAL_StatusTypeDef OLED_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str);
+HAL_StatusTypeDef OLED_DrawString(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str);
 
 #endif

@@ -13,7 +13,7 @@ HAL_StatusTypeDef OLED_Clear(OLED_Handle* const holed, uint8_t data);
 static HAL_StatusTypeDef OLED_SetPosition(OLED_Handle* const holed, uint8_t x, uint8_t page);
 HAL_StatusTypeDef OLED_SendCommand(OLED_Handle* const holed, uint8_t data);
 HAL_StatusTypeDef OLED_SendData(OLED_Handle* const holed, uint8_t data);
-HAL_StatusTypeDef OLED_BOOL_DrawBMP(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data, uint8_t bool);
+HAL_StatusTypeDef OLED_DrawBitmap(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data);
 static uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size);
 
 OLED_Handle OLED_Init(I2C_HandleTypeDef* hi2c) {
@@ -144,7 +144,7 @@ HAL_StatusTypeDef OLED_SendData(OLED_Handle* const holed, uint8_t data) {
     return HAL_I2C_Mem_Write(holed->hi2c, OLED_I2C_ADDRESS, OLED_DATA_ADDRESS, I2C_MEMADD_SIZE_8BIT, &data, 1, 0xff);
 }
 
-HAL_StatusTypeDef OLED_BOOL_DrawColumn(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *data, uint8_t size, uint8_t bool) {
+HAL_StatusTypeDef OLED_DrawColumn(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *data, uint8_t size, uint8_t bool) {
     if (x >= OLED_WIDTH || y + size > OLED_HEIGHT) return HAL_ERROR;
     uint8_t pos = 0;
     while (size > 0) {
@@ -190,19 +190,11 @@ HAL_StatusTypeDef OLED_BOOL_DrawColumn(OLED_Handle* const holed, uint8_t x, uint
     return HAL_OK;
 }
 
-HAL_StatusTypeDef OLED_DrawColumn(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *data, uint8_t size) {
-    return OLED_BOOL_DrawColumn(holed, x, y, data, size, OLED_BOOL_Replace);
-}
-
-HAL_StatusTypeDef OLED_BOOL_DrawChar(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t c, uint8_t bool) {
-    return OLED_BOOL_DrawBMP(holed, x, y, 6, 8, ((uint8_t *)F6X8) + 6 * (c - 32), bool);
-}
-
 HAL_StatusTypeDef OLED_DrawChar(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t c) {
-    return OLED_BOOL_DrawBMP(holed, x, y, 6, 8, ((uint8_t *)F6X8) + 6 * (c - 32), OLED_BOOL_Replace);
+    return OLED_DrawBitmap(holed, x, y, 6, 8, ((uint8_t *)F6X8) + 6 * (c - 32));
 }
 
-HAL_StatusTypeDef OLED_BOOL_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str, uint8_t bool) {
+HAL_StatusTypeDef OLED_DrawString(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str) {
     uint16_t i = 0;
 
     uint8_t ret = 0;
@@ -213,7 +205,7 @@ HAL_StatusTypeDef OLED_BOOL_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t
             y += 8;
         }
 
-        ret |= OLED_BOOL_DrawChar(holed, x, y, str[i], bool);
+        ret |= OLED_DrawChar(holed, x, y, str[i]);
 
         x += 6;
         i++;
@@ -222,24 +214,16 @@ HAL_StatusTypeDef OLED_BOOL_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t
     return ret ? HAL_ERROR : HAL_OK;
 }
 
-HAL_StatusTypeDef OLED_DrawStr(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t *str) {
-    return OLED_BOOL_DrawStr(holed, x, y, str, OLED_BOOL_Replace);
-}
-
-HAL_StatusTypeDef OLED_BOOL_DrawBMP(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data, uint8_t bool) {
+HAL_StatusTypeDef OLED_DrawBitmap(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data) {
     uint8_t ret = 0;
     while (width > 0) {
-        ret |= OLED_BOOL_DrawColumn(holed, x, y, data, high, bool);
+        ret |= OLED_DrawColumn(holed, x, y, data, high, OLED_BOOL_Replace);
         data += (high + 7) / 8;
         width--;
         x++;
     }
 
     return ret ? HAL_ERROR : HAL_OK;
-}
-
-HAL_StatusTypeDef OLED_DrawBMP(OLED_Handle* const holed, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data) {
-    return OLED_BOOL_DrawBMP(holed, x, y, width, high, data, OLED_BOOL_Replace);
 }
 
 static uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size) {

@@ -56,6 +56,9 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
 SemaphoreHandle_t printSemaphoreHandle = NULL;
+MOTOR_Handle hmotorX;
+uint8_t rxData[1] = {0};
+uint8_t rxFlag = FALSE;
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
 
@@ -63,6 +66,7 @@ osThreadId mainLoopWorkerHandle;
 /* USER CODE BEGIN FunctionPrototypes */
 void MOTOR_HandleTask(void);
 void OLED_HandleTask(void);
+void Message_HandleTask(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartMainTask(void const * argument);
@@ -156,6 +160,11 @@ void StartMainTask(void const * argument)
   
   DebugPrintf("Hello World", __FUNCTION__, __LINE__);
 
+  while(createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK) {
+    DebugPrintf("Message Handle Task Create Failed", __FUNCTION__, __LINE__);
+    osDelay(100);
+  }
+
   for (;;)
   {
     osDelay(1000);
@@ -165,30 +174,92 @@ void StartMainTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void MOTOR_HandleTask()
-{
-  MOTOR *xMotor = new_MOTOR(X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
-  xMotor->init(xMotor);
-  MOTOR *yMotor = new_MOTOR(Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
-  yMotor->init(yMotor);
-  xMotor->rotate(xMotor, 51200 * 5);
-  yMotor->rotate(yMotor, 51200 * 5);
+void MOTOR_HandleTask() {
+  hmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
+  MOTOR_Handle hmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
+  MOTOR_Rotate(&hmotorX, 0);
+  MOTOR_Rotate(&hmotorY, 0);
+  // MOTOR_Rotate(&hmotorY, 51200 * 20);
+  // osDelay(2000);
+  // MOTOR_SendCommand(&hmotorX, TMC5160_SWMODE, 0x400);
+  // osDelay(100);
+  for (;;)
+  {
+    // DebugPrintf("%d", __FUNCTION__, __LINE__, MOTOR_GetRotateAngle(&hmotorX));
+    // MOTOR_Rotate(&hmotorX, angle += 15);
+    // MOTOR_ReadData(&hmotorX, TMC5160_XACTUAL);
+    // MOTOR_Rotate(&hmotorX, rand() % 51058 + 142);
+    // MOTOR_Rotate(&hmotorY, rand() % 51058 + 142);
+    // MOTOR_Rotate(&hmotorX, rand());
+    // MOTOR_ReadData(&hmotorX, TMC5160_XACTUAL);
+    osDelay(500);
+  }
+}
+
+void OLED_HandleTask() {
+  OLED_Handle holed = OLED_Init(&OLED_HI2C);
+  OLED_DrawString(&holed, 0, 10, "OpenMOSS");
+  OLED_DrawString(&holed, 0, 20, "BOOT (FIREWARE.bin)");
+  OLED_Refresh(&holed);
   for (;;)
   {
     osDelay(100);
   }
 }
 
-void OLED_HandleTask()
-{
-  OLED_Handle holed = OLED_Init(&OLED_HI2C);
-  OLED_DrawStr(&holed, 0, 10, "OpenMOSS");
-  OLED_DrawStr(&holed, 0, 20, "BOOT (FIREWARE.bin)");
-  OLED_Refresh(&holed);
-  for (;;)
-  {
-    osDelay(100);
+void Message_HandleTask() {
+ while(1) {
+  HAL_UART_Receive_IT(&huart2, rxData, 1);
+  if(rxFlag) {
+    rxFlag = FALSE;
+    MOTOR_Rotate(&hmotorX, rxData[0]);
   }
+  osDelay(100);
+ }
+}
+
+/**
+ * 串口发�?�回�??
+ */
+void UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  // DebugPrintfISR("PPPPPP", __FUNCTION__, __LINE__);
+    if (huart->Instance == USART2)
+    {
+        
+    }
+}
+
+/**
+ * 串口接收回调
+ */
+void UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  // DebugPrintfISR("WWWWWWW", __FUNCTION__, __LINE__);
+    if (huart->Instance == USART2)
+    {
+      // if(rxData[0] == 0x0D) {
+      //   // DebugPrintfISR("OOOOOOK", __FUNCTION__, __LINE__);
+      // }
+      // while (HAL_UART_Receive_IT(&huart2, rxData, 1) != HAL_OK)
+      // {
+      //     osDelay(10);
+      // }
+    }
+}
+
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+  UART_TxCpltCallback(huart);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  if(huart->Instance == USART2) {
+    rxFlag = TRUE;
+  }
+  // UART_RxCpltCallback(huart);
 }
 /* USER CODE END Application */
 

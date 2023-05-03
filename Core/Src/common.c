@@ -28,6 +28,7 @@ void DebugPrintf(const char *format, const char name[17], uint32_t line, ...)
 
 void DebugPrintfISR(const char *format, const char name[17], uint32_t line, ...)
 {
+    xSemaphoreTakeFromISR(printSemaphoreHandle, pdFALSE);
     va_list ap;
     va_start(ap, line);
     if (name != NULL && line != NULL)
@@ -35,10 +36,12 @@ void DebugPrintfISR(const char *format, const char name[17], uint32_t line, ...)
     vprintf(format, ap);
     printf("\n");
     va_end(ap);
+    xSemaphoreGiveFromISR(printSemaphoreHandle, pdFALSE);
 }
 
 void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t line)
 {
+    xSemaphoreTake(printSemaphoreHandle, 100);
     if (name != NULL && line != NULL)
         printf("[%s:%d]: ", name, line);
     for (uint32_t i = 0; i < size; i++)
@@ -48,6 +51,7 @@ void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t l
             printf(" ");
     }
     printf("\n");
+    xSemaphoreGive(printSemaphoreHandle);
 }
 
 /**
