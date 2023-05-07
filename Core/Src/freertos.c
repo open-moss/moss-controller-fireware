@@ -178,7 +178,7 @@ void MOTOR_HandleTask() {
   hmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
   MOTOR_Handle hmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
   MOTOR_Rotate(&hmotorX, 0);
-  MOTOR_Rotate(&hmotorY, 0);
+  MOTOR_Rotate(&hmotorY, 360 * 20);
   // MOTOR_Rotate(&hmotorY, 51200 * 20);
   // osDelay(2000);
   // MOTOR_SendCommand(&hmotorX, TMC5160_SWMODE, 0x400);
@@ -219,7 +219,7 @@ void Message_HandleTask() {
 }
 
 /**
- * 串口发�?�回�??
+ * 串口发�?�回�??
  */
 void UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
