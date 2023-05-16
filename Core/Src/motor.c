@@ -68,7 +68,5 @@ int32_t MOTOR_ReadData(MOTOR_Handle* const hmotor, uint8_t address) {
     HAL_SPI_TransmitReceive(hmotor->hspi, txBuffer, rxBuffer, 5, 100);
 	HAL_GPIO_WritePin(hmotor->csGPIO, hmotor->csPIN, GPIO_PIN_SET);
     int32_t ret = (rxBuffer[1] << 24) | (rxBuffer[2] << 16) | (rxBuffer[3] << 8) | rxBuffer[4];
-    // DebugHEXPrint(rxBuffer, sizeof(int8_t) * 5, __FUNCTION__, __LINE__);
-    // DebugPrintf("%d", __FUNCTION__, __LINE__, ret);
     return ret;
 }

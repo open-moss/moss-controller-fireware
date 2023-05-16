@@ -36,6 +36,8 @@
 #include "string.h"
 #include "motor.h"
 #include "oled.h"
+#include "messager.h"
+#include "vl53l1_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +57,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
+MESSAGER_Handle hmessager;
+
 SemaphoreHandle_t printSemaphoreHandle = NULL;
 MOTOR_Handle hmotorX;
 uint8_t rxData[1] = {0};
@@ -66,6 +70,7 @@ osThreadId mainLoopWorkerHandle;
 /* USER CODE BEGIN FunctionPrototypes */
 void MOTOR_HandleTask(void);
 void OLED_HandleTask(void);
+void ToF_HandleTask(void);
 void Message_HandleTask(void);
 /* USER CODE END FunctionPrototypes */
 
@@ -150,23 +155,33 @@ void StartMainTask(void const * argument)
     osDelay(100);
   }
 
-
-  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
+  DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);
   
   while(createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 768) != HAL_OK) {
     DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
   
-  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
+  DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
+
+  while(createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK) {
+    DebugPrintf("ToF Handle Task Create Failed", __FUNCTION__, __LINE__);
+    osDelay(100);
+  }
+  
+  DebugPrintf("ToF Handle Task Created", __FUNCTION__, __LINE__);
 
   while(createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK) {
     DebugPrintf("Message Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
 
+  // AutonomousLowPowerRangingTest();
+
   for (;;)
   {
+    // if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
+    //   printf("FOUNDED HUMAN!!!");
     osDelay(1000);
   }
   /* USER CODE END StartMainTask */
@@ -178,7 +193,7 @@ void MOTOR_HandleTask() {
   hmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
   MOTOR_Handle hmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
   MOTOR_Rotate(&hmotorX, 0);
-  MOTOR_Rotate(&hmotorY, 360 * 20);
+  MOTOR_Rotate(&hmotorY, 0);
   // MOTOR_Rotate(&hmotorY, 51200 * 20);
   // osDelay(2000);
   // MOTOR_SendCommand(&hmotorX, TMC5160_SWMODE, 0x400);
@@ -207,59 +222,72 @@ void OLED_HandleTask() {
   }
 }
 
-void Message_HandleTask() {
- while(1) {
-  HAL_UART_Receive_IT(&huart2, rxData, 1);
-  if(rxFlag) {
-    rxFlag = FALSE;
-    MOTOR_Rotate(&hmotorX, rxData[0]);
+volatile int IntCount;
+#define isAutonomousExample 1  /* Allow to select either autonomous ranging or fast ranging example */
+#define isInterrupt 1 /* If isInterrupt = 1 then device working in interrupt mode, else device working in polling mode */
+
+void ToF_HandleTask() {
+  printf("VL53L1X Examples...\n");
+  VL53L1_Dev_t dev;
+  VL53L1_DEV Dev = &dev;
+  Dev->I2cHandle = &hi2c2;
+  Dev->I2cDevAddr = 0x52;
+  uint8_t byteData;
+  uint16_t wordData;
+  VL53L1_RdByte(Dev, 0x010F, &byteData);
+  printf("VL53L1X Model_ID: %02X\n\r", byteData);
+  VL53L1_RdByte(Dev, 0x0110, &byteData);
+  printf("VL53L1X Module_Type: %02X\n\r", byteData);
+  VL53L1_RdWord(Dev, 0x010F, &wordData);
+  printf("VL53L1X: %02X\n\r", wordData);
+  static VL53L1_RangingMeasurementData_t RangingData;
+  printf("Autonomous Ranging Test\n");
+  int status = VL53L1_WaitDeviceBooted(Dev);
+  status = VL53L1_DataInit(Dev);
+  status = VL53L1_StaticInit(Dev);
+  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
+  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
+  status = VL53L1_StartMeasurement(Dev);
+  if(status){
+		printf("VL53L1_StartMeasurement failed \n");
+		while(1);
+	}	
+  for (;;)
+  {
+    status = VL53L1_WaitMeasurementDataReady(Dev);
+    if(!status)
+    {
+      status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
+      if(status==0){
+        printf("%dmm\n", RangingData.RangeMilliMeter);
+        // printf("%d,%d,%.2f,%.2f\n", RangingData.RangeStatus,RangingData.RangeMilliMeter,
+        //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
+      }
+      status = VL53L1_ClearInterruptAndStartMeasurement(Dev);
+    }
+    osDelay(500);
   }
+}
+
+void Message_HandleTask() {
+ hmessager = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART);
+ DebugPrintf("UPUPUP", __FUNCTION__, __LINE__);
+ while(1) {
   osDelay(100);
  }
 }
 
-/**
- * 串口发�?�回�??
- */
-void UART_TxCpltCallback(UART_HandleTypeDef *huart)
-{
-  // DebugPrintfISR("PPPPPP", __FUNCTION__, __LINE__);
-    if (huart->Instance == USART2)
-    {
-        
-    }
-}
-
-/**
- * 串口接收回调
- */
-void UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-  // DebugPrintfISR("WWWWWWW", __FUNCTION__, __LINE__);
-    if (huart->Instance == USART2)
-    {
-      // if(rxData[0] == 0x0D) {
-      //   // DebugPrintfISR("OOOOOOK", __FUNCTION__, __LINE__);
-      // }
-      // while (HAL_UART_Receive_IT(&huart2, rxData, 1) != HAL_OK)
-      // {
-      //     osDelay(10);
-      // }
-    }
-}
-
-
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  UART_TxCpltCallback(huart);
+  if(huart->Instance == hmessager.huart->Instance)
+    MESSAGER_TxCpltCallback(&hmessager);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == USART2) {
-    rxFlag = TRUE;
-  }
-  // UART_RxCpltCallback(huart);
+  if(huart->Instance == hmessager.huart->Instance)
+    MESSAGER_RxCpltCallback(&hmessager);
 }
 /* USER CODE END Application */
 

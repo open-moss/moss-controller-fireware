@@ -3,13 +3,14 @@
 
 #include "usart.h"
 #include "common.h"
+#include "config.h"
 
 extern SemaphoreHandle_t printSemaphoreHandle;
 
 int fputc(int c, FILE *f)
 {
     uint8_t temp[1] = {c};
-    HAL_UART_Transmit(&huart2, temp, 1, 100);
+    HAL_UART_Transmit(&DEBUG_SERIAL_PORT_HUART, temp, 1, 100);
     return c;
 }
 
@@ -76,4 +77,45 @@ HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, ui
     if(threadHandle == NULL)
         return HAL_ERROR;
     return HAL_OK;
+}
+
+/**
+ * 时钟微秒级延迟
+ * 
+ * @param [in] us 微秒
+ */
+// void Delayus(uint16_t us)
+// {
+//     uint16_t differ = 0xffff - us - 5;
+//     if (HAL_TIM_Base_Start_IT(delayTimer) != HAL_OK)
+//     {
+//         Debug_Printf("Delayus Failed", __FUNCTION__, __LINE__);
+//         return;
+//     }
+//     __HAL_TIM_SetCounter(delayTimer, differ);
+//     while (differ < 0xffff - 5)
+//     {
+//         differ = __HAL_TIM_GetCounter(delayTimer);
+//     }
+//     if (HAL_TIM_Base_Stop_IT(delayTimer) != HAL_OK)
+//     {
+//         Debug_Printf("Delayus Failed", __FUNCTION__, __LINE__);
+//         return;
+//     }
+// }
+
+/**
+ * 获取当前系统节拍数（开机到现在的毫秒数）
+ */
+uint32_t Get_System_Time(void)
+{
+    return xTaskGetTickCount();
+}
+
+/**
+ * 获取当前系统节拍数（开机到现在的秒数）
+ */
+uint32_t Get_System_Time_Seconds(void)
+{
+    return xTaskGetTickCount() / 1000;
 }

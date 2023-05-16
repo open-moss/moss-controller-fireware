@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xB</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;                                      ../Drivers/STM32F1xx_HAL_Driver/Inc;                                      ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;                                      ../Middlewares/Third_Party/FreeRTOS/Source/include;                                      ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;                                      ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;                                      ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;                                      ../Drivers/CMSIS/Include</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc;../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;../Middlewares/Third_Party/FreeRTOS/Source/include;../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;../Drivers/CMSIS/Device/ST/STM32F1xx/Include;../Drivers/CMSIS/Include;../Core/Inc/vl53l1x</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -621,6 +621,76 @@
               <FileName>port.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3/port.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Application/User/Core/vl53l1x</GroupName>
+          <Files>
+            <File>
+              <FileName>vl53l1_api.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_api_calibration.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api_calibration.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_api_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_api_debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api_debug.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_api_preset_modes.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api_preset_modes.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_api_strings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_api_strings.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_core_support.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_core_support.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_error_strings.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_error_strings.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_platform.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_platform.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_register_funcs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_register_funcs.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_silicon_core.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_silicon_core.c</FilePath>
+            </File>
+            <File>
+              <FileName>vl53l1_wait.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\vl53l1x\vl53l1_wait.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -10,6 +10,7 @@
 
 #define FIREWARE_VERSION "1.0.0"
 #define DOG_FEED_INTERVAL 6000  //喂狗间隔时间（毫秒）
+// #define DELAY_US_TIMER  &htim//微秒级延迟时钟
 
 /**
  * OLED屏幕配置 
@@ -42,5 +43,15 @@
 #define Y_MOTOR_HSPI hspi1  //SPI句柄
 #define Y_MOTOR_CS_GPIO_PORT GPIOA  //片选GPIO
 #define Y_MOTOR_CS_PIN GPIO_PIN_4  //片选GPIO PIN
+
+/**
+ * 串口配置
+ */
+#define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //上位机串口UART句柄
+#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_MAX_SIZE 128  //上位机串口缓冲区最大大小
+#define DEBUG_SERIAL_PORT_HUART huart2  //调试串口UART句柄
+#define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小
+#define EXTENDS_SERIAL_PORT_HUART huart3  //扩展串口UART句柄
+#define EXTENDS_SERIAL_PORT_BUFFER_MAX_SIZE 128  //扩展串口缓冲区最大大小
 
 #endif
