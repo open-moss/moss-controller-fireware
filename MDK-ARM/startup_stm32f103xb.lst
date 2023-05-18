@@ -467,7 +467,7 @@ ireware\startup_stm32f103xb.o -I..\Core\Inc -I.\RTE\_moss-controller-fireware -
 IC:\Users\Vinlic\AppData\Local\Arm\Packs\ARM\CMSIS\5.6.0\CMSIS\Core\Include -IC
 :\Users\Vinlic\AppData\Local\Arm\Packs\Keil\STM32F1xx_DFP\2.3.0\Device\Include 
 --predefine="__MICROLIB SETA 1" --predefine="__UVISION_VERSION SETA 529" --pred
-efine="_RTE_ SETA 1" --predefine="STM32F10X_MD SETA 1" --list=startup_stm32f103
+efine="_RTE_ SETA 1" --predefine="STM32F10X_HD SETA 1" --list=startup_stm32f103
 xb.lst startup_stm32f103xb.s
 
 

@@ -164,14 +164,14 @@ void StartMainTask(void const * argument)
   
   DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
 
-  while(createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK) {
+  while(createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 800) != HAL_OK) {
     DebugPrintf("ToF Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
   
   DebugPrintf("ToF Handle Task Created", __FUNCTION__, __LINE__);
 
-  while(createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK) {
+  while(createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 512) != HAL_OK) {
     DebugPrintf("Message Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
@@ -180,8 +180,8 @@ void StartMainTask(void const * argument)
 
   for (;;)
   {
-    // if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
-    //   printf("FOUNDED HUMAN!!!");
+    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
+       printf("FOUNDED HUMAN!!!");
     osDelay(1000);
   }
   /* USER CODE END StartMainTask */
@@ -271,8 +271,11 @@ void ToF_HandleTask() {
 }
 
 void Message_HandleTask() {
- hmessager = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART);
- DebugPrintf("UPUPUP", __FUNCTION__, __LINE__);
+ hmessager = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+ if(MESSAGER_Listen(&hmessager) == HAL_OK)
+  DebugPrintf("UPUPUP", __FUNCTION__, __LINE__);
+ else
+  DebugPrintf("Messager Listen Failed", __FUNCTION__, __LINE__);
  while(1) {
   osDelay(100);
  }

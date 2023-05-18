@@ -49,6 +49,7 @@
  */
 #define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //上位机串口UART句柄
 #define UPPER_COMPUTER_SERIAL_PORT_BUFFER_MAX_SIZE 128  //上位机串口缓冲区最大大小
+#define UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT 3000  //上位机串口接收数据超时时间
 #define DEBUG_SERIAL_PORT_HUART huart2  //调试串口UART句柄
 #define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小
 #define EXTENDS_SERIAL_PORT_HUART huart3  //扩展串口UART句柄
