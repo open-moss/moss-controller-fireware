@@ -14,16 +14,15 @@ typedef struct {
     uint16_t size;  //数据大小
 } SerialRxBuffer;
 
-typedef struct _MESSAGER_Handle MESSAGER_Handle;
-typedef struct _MESSAGER_Handle {
+typedef struct {
     UART_HandleTypeDef* huart;
     SerialRxBuffer* rxBuffer;
     uint16_t rxTimeout;
     BOOL serialSending;
     BOOL serialReceiving;
-}MESSAGER_Handle;
+} MESSAGER_Handle;
 
-MESSAGER_Handle MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxTimeout);
+MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxTimeout);
 HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle* const hmessager);
 void MESSAGER_TxCpltCallback(MESSAGER_Handle* const hmessager);
 void MESSAGER_RxCpltCallback(MESSAGER_Handle* const hmessager);

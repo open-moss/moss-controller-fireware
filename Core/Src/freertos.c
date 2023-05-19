@@ -57,10 +57,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-MESSAGER_Handle hmessager;
+MESSAGER_Handle* pmgr;
+
+MOTOR_Handle* pmotorX;
+MOTOR_Handle* pmotorY;
+
+OLED_Handle* poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
-MOTOR_Handle hmotorX;
+
 uint8_t rxData[1] = {0};
 uint8_t rxFlag = FALSE;
 /* USER CODE END Variables */
@@ -157,7 +162,7 @@ void StartMainTask(void const * argument)
 
   DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);
   
-  while(createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 768) != HAL_OK) {
+  while(createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK) {
     DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
@@ -182,6 +187,7 @@ void StartMainTask(void const * argument)
   {
     if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
        printf("FOUNDED HUMAN!!!");
+    PrintTaskList();
     osDelay(1000);
   }
   /* USER CODE END StartMainTask */
@@ -190,32 +196,32 @@ void StartMainTask(void const * argument)
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
 void MOTOR_HandleTask() {
-  hmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
-  MOTOR_Handle hmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
-  MOTOR_Rotate(&hmotorX, 0);
-  MOTOR_Rotate(&hmotorY, 0);
-  // MOTOR_Rotate(&hmotorY, 51200 * 20);
+  pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
+  pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
+  MOTOR_Rotate(pmotorX, 360);
+  MOTOR_Rotate(pmotorY, 360);
+  // MOTOR_Rotate(&pmotorY, 51200 * 20);
   // osDelay(2000);
-  // MOTOR_SendCommand(&hmotorX, TMC5160_SWMODE, 0x400);
+  // MOTOR_SendCommand(&pmotorX, TMC5160_SWMODE, 0x400);
   // osDelay(100);
   for (;;)
   {
-    // DebugPrintf("%d", __FUNCTION__, __LINE__, MOTOR_GetRotateAngle(&hmotorX));
-    // MOTOR_Rotate(&hmotorX, angle += 15);
-    // MOTOR_ReadData(&hmotorX, TMC5160_XACTUAL);
-    // MOTOR_Rotate(&hmotorX, rand() % 51058 + 142);
-    // MOTOR_Rotate(&hmotorY, rand() % 51058 + 142);
-    // MOTOR_Rotate(&hmotorX, rand());
-    // MOTOR_ReadData(&hmotorX, TMC5160_XACTUAL);
+    // DebugPrintf("%d", __FUNCTION__, __LINE__, MOTOR_GetRotateAngle(&pmotorX));
+    // MOTOR_Rotate(&pmotorX, angle += 15);
+    // MOTOR_ReadData(&pmotorX, TMC5160_XACTUAL);
+    // MOTOR_Rotate(&pmotorX, rand() % 51058 + 142);
+    // MOTOR_Rotate(&pmotorY, rand() % 51058 + 142);
+    // MOTOR_Rotate(&pmotorX, rand());
+    // MOTOR_ReadData(&pmotorX, TMC5160_XACTUAL);
     osDelay(500);
   }
 }
 
 void OLED_HandleTask() {
-  OLED_Handle holed = OLED_Init(&OLED_HI2C);
-  OLED_DrawString(&holed, 0, 10, "OpenMOSS");
-  OLED_DrawString(&holed, 0, 20, "BOOT (FIREWARE.bin)");
-  OLED_Refresh(&holed);
+  poled = OLED_Init(&OLED_HI2C);
+  OLED_DrawString(poled, 0, 10, "OpenMOSS");
+  OLED_DrawString(poled, 0, 20, "BOOT (FIREWARE.bin)");
+  OLED_Refresh(poled);
   for (;;)
   {
     osDelay(100);
@@ -261,6 +267,8 @@ void ToF_HandleTask() {
       status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
       if(status==0){
         printf("%dmm\n", RangingData.RangeMilliMeter);
+        MOTOR_Rotate(pmotorX, RangingData.RangeMilliMeter);
+        MOTOR_Rotate(pmotorY, RangingData.RangeMilliMeter);
         // printf("%d,%d,%.2f,%.2f\n", RangingData.RangeStatus,RangingData.RangeMilliMeter,
         //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
       }
@@ -271,8 +279,8 @@ void ToF_HandleTask() {
 }
 
 void Message_HandleTask() {
- hmessager = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
- if(MESSAGER_Listen(&hmessager) == HAL_OK)
+ pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+ if(MESSAGER_Listen(pmgr) == HAL_OK)
   DebugPrintf("UPUPUP", __FUNCTION__, __LINE__);
  else
   DebugPrintf("Messager Listen Failed", __FUNCTION__, __LINE__);
@@ -283,14 +291,14 @@ void Message_HandleTask() {
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == hmessager.huart->Instance)
-    MESSAGER_TxCpltCallback(&hmessager);
+  if(huart->Instance == pmgr->huart->Instance)
+    MESSAGER_TxCpltCallback(pmgr);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == hmessager.huart->Instance)
-    MESSAGER_RxCpltCallback(&hmessager);
+  if(huart->Instance == pmgr->huart->Instance)
+    MESSAGER_RxCpltCallback(pmgr);
 }
 /* USER CODE END Application */
 
