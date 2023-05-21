@@ -84,25 +84,29 @@ HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, ui
  * 
  * @param [in] us 微秒
  */
-// void Delayus(uint16_t us)
-// {
-//     uint16_t differ = 0xffff - us - 5;
-//     if (HAL_TIM_Base_Start_IT(delayTimer) != HAL_OK)
-//     {
-//         Debug_Printf("Delayus Failed", __FUNCTION__, __LINE__);
-//         return;
-//     }
-//     __HAL_TIM_SetCounter(delayTimer, differ);
-//     while (differ < 0xffff - 5)
-//     {
-//         differ = __HAL_TIM_GetCounter(delayTimer);
-//     }
-//     if (HAL_TIM_Base_Stop_IT(delayTimer) != HAL_OK)
-//     {
-//         Debug_Printf("Delayus Failed", __FUNCTION__, __LINE__);
-//         return;
-//     }
-// }
+void Delayus(uint16_t us)
+{
+    uint16_t differ = 0xffff - us - 5;
+    if (HAL_TIM_Base_Start_IT(DELAY_US_TIMER) != HAL_OK)
+    {
+        DebugPrintf("Delayus Failed", __FUNCTION__, __LINE__);
+        return;
+    }
+    __HAL_TIM_SetCounter(DELAY_US_TIMER, differ);
+    while (differ < 0xffff - 5)
+    {
+        differ = __HAL_TIM_GetCounter(DELAY_US_TIMER);
+    }
+    if (HAL_TIM_Base_Stop_IT(DELAY_US_TIMER) != HAL_OK)
+    {
+        DebugPrintf("Delayus Failed", __FUNCTION__, __LINE__);
+        return;
+    }
+}
+
+uint16_t mergeToUint16(uint8_t high, uint8_t low) {
+    return high >> 8 | low;
+}
 
 /**
  * 获取当前系统节拍数（开机到现在的毫秒数）

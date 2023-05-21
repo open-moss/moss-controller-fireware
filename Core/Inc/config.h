@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "spi.h"
+#include "tim.h"
 
 /**
  * 系统配置
@@ -10,7 +11,7 @@
 
 #define FIREWARE_VERSION "1.0.0"
 #define DOG_FEED_INTERVAL 6000  //喂狗间隔时间（毫秒）
-// #define DELAY_US_TIMER  &htim//微秒级延迟时钟
+#define DELAY_US_TIMER  &htim2  //微秒级延迟时钟
 
 /**
  * OLED屏幕配置 
@@ -33,6 +34,8 @@
 #define X_MOTOR_HSPI hspi2  //SPI句柄
 #define X_MOTOR_CS_GPIO_PORT GPIOB  //片选GPIO
 #define X_MOTOR_CS_PIN GPIO_PIN_12  //片选GPIO PIN
+#define X_MOTOR_LIMIT_GPIO_PORT GPIOC  //限位GPIO
+#define X_MOTOR_LIMIT_PIN GPIO_PIN_7  //限位GPIO PIN
 
 /**
  * Y轴电机配置
@@ -43,12 +46,14 @@
 #define Y_MOTOR_HSPI hspi1  //SPI句柄
 #define Y_MOTOR_CS_GPIO_PORT GPIOA  //片选GPIO
 #define Y_MOTOR_CS_PIN GPIO_PIN_4  //片选GPIO PIN
+#define Y_MOTOR_LIMIT_GPIO_PORT GPIOA  //限位GPIO
+#define Y_MOTOR_LIMIT_PIN GPIO_PIN_8  //限位GPIO PIN
 
 /**
  * 串口配置
  */
 #define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //上位机串口UART句柄
-#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_MAX_SIZE 128  //上位机串口缓冲区最大大小
+#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE 128  //上位机串口缓冲区大小
 #define UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT 3000  //上位机串口接收数据超时时间
 #define DEBUG_SERIAL_PORT_HUART huart2  //调试串口UART句柄
 #define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小

@@ -71,10 +71,14 @@ void Error_Handler(void);
 #define _850NM_LIGHT_GPIO_Port GPIOB
 #define IR_38KHZ_Pin GPIO_PIN_6
 #define IR_38KHZ_GPIO_Port GPIOC
+#define M2_LIMIT_Pin GPIO_PIN_7
+#define M2_LIMIT_GPIO_Port GPIOC
 #define OUT_5V_Pin GPIO_PIN_8
 #define OUT_5V_GPIO_Port GPIOC
 #define OUT_3V3_Pin GPIO_PIN_9
 #define OUT_3V3_GPIO_Port GPIOC
+#define M1_LIMIT_Pin GPIO_PIN_8
+#define M1_LIMIT_GPIO_Port GPIOA
 #define BODY_SENSOR_Pin GPIO_PIN_4
 #define BODY_SENSOR_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */

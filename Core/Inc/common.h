@@ -6,9 +6,10 @@
 void DebugPrintf(const char *format, const char name[17], uint32_t line, ...);
 void DebugPrintfISR(const char *format, const char name[17], uint32_t line, ...);
 void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t line);
-// void Delayus(uint16_t us);
+void Delayus(uint16_t us);
 uint32_t Get_System_Time(void);
 uint32_t Get_System_Time_Seconds(void);
+uint16_t mergeToUint16(uint8_t high, uint8_t low);
 
 #define FALSE 0
 #define TRUE (!FALSE)

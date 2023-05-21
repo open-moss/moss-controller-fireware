@@ -23,7 +23,11 @@
         "stm32f1xx_hal.h": "c",
         "vl53l1_platform_log.h": "c",
         "vl53l1_api.h": "c",
-        "usart.h": "c"
+        "usart.h": "c",
+        "stm32f1xx_hal_uart.h": "c",
+        "string": "c",
+        "xstring": "c",
+        "crc32.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled"
 }

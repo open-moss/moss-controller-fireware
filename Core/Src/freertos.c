@@ -57,12 +57,12 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-MESSAGER_Handle* pmgr;
+MESSAGER_Handle *pmgr;
 
-MOTOR_Handle* pmotorX;
-MOTOR_Handle* pmotorY;
+MOTOR_Handle *pmotorX;
+MOTOR_Handle *pmotorY;
 
-OLED_Handle* poled;
+OLED_Handle *poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
 
@@ -148,46 +148,43 @@ void StartMainTask(void const * argument)
 {
   /* USER CODE BEGIN StartMainTask */
 
-
   /* Infinite loop */
 
-  osDelay(100);
-
-  DebugPrintf("Hello World", __FUNCTION__, __LINE__);
-
-  while(createTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 256) != HAL_OK) {
+  while (createTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
+  {
     DebugPrintf("MOTOR Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
 
-  DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);
-  
-  while(createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK) {
-    DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
-    osDelay(100);
-  }
-  
-  DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
+  DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);  
 
-  while(createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 800) != HAL_OK) {
+  while (createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 640) != HAL_OK)
+  {
     DebugPrintf("ToF Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
-  
+
   DebugPrintf("ToF Handle Task Created", __FUNCTION__, __LINE__);
 
-  while(createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 512) != HAL_OK) {
+  while (createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK)
+  {
     DebugPrintf("Message Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
   }
 
-  // AutonomousLowPowerRangingTest();
+  while (createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK)
+  {
+    DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
+    osDelay(100);
+  }
+
+  DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
 
   for (;;)
   {
-    if(HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
-       printf("FOUNDED HUMAN!!!");
-    PrintTaskList();
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
+      printf("FOUNDED HUMAN!!!");
+    // PrintTaskList();
     osDelay(1000);
   }
   /* USER CODE END StartMainTask */
@@ -195,44 +192,48 @@ void StartMainTask(void const * argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-void MOTOR_HandleTask() {
-  pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN);
-  pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN);
-  MOTOR_Rotate(pmotorX, 360);
-  MOTOR_Rotate(pmotorY, 360);
+void MOTOR_HandleTask()
+{
+  pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN, X_MOTOR_LIMIT_GPIO_PORT, X_MOTOR_LIMIT_PIN);
+  pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN, Y_MOTOR_LIMIT_GPIO_PORT, Y_MOTOR_LIMIT_PIN);
+  // MOTOR_Rotate(pmotorX, 360);
+  // MOTOR_Rotate(pmotorY, 360);
   // MOTOR_Rotate(&pmotorY, 51200 * 20);
-  // osDelay(2000);
-  // MOTOR_SendCommand(&pmotorX, TMC5160_SWMODE, 0x400);
-  // osDelay(100);
   for (;;)
   {
-    // DebugPrintf("%d", __FUNCTION__, __LINE__, MOTOR_GetRotateAngle(&pmotorX));
-    // MOTOR_Rotate(&pmotorX, angle += 15);
-    // MOTOR_ReadData(&pmotorX, TMC5160_XACTUAL);
-    // MOTOR_Rotate(&pmotorX, rand() % 51058 + 142);
-    // MOTOR_Rotate(&pmotorY, rand() % 51058 + 142);
-    // MOTOR_Rotate(&pmotorX, rand());
-    // MOTOR_ReadData(&pmotorX, TMC5160_XACTUAL);
+    if (MOTOR_LimitCheck(pmotorX))
+      DebugPrintf("X MOTOR LIMIT!", __FUNCTION__, __LINE__);
+    if (MOTOR_LimitCheck(pmotorY))
+      DebugPrintf("Y MOTOR LIMIT!", __FUNCTION__, __LINE__);
     osDelay(500);
   }
 }
 
-void OLED_HandleTask() {
+void OLED_HandleTask()
+{
   poled = OLED_Init(&OLED_HI2C);
   OLED_DrawString(poled, 0, 10, "OpenMOSS");
   OLED_DrawString(poled, 0, 20, "BOOT (FIREWARE.bin)");
   OLED_Refresh(poled);
   for (;;)
   {
+    uint8_t str1[20];
+    uint8_t str2[20];
+    sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
+    sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
+    OLED_DrawString(poled, 0, 30, str1);
+    OLED_DrawString(poled, 0, 40, str2);
+    OLED_Refresh(poled);
     osDelay(100);
   }
 }
 
 volatile int IntCount;
-#define isAutonomousExample 1  /* Allow to select either autonomous ranging or fast ranging example */
-#define isInterrupt 1 /* If isInterrupt = 1 then device working in interrupt mode, else device working in polling mode */
+#define isAutonomousExample 1 /* Allow to select either autonomous ranging or fast ranging example */
+#define isInterrupt 1         /* If isInterrupt = 1 then device working in interrupt mode, else device working in polling mode */
 
-void ToF_HandleTask() {
+void ToF_HandleTask()
+{
   printf("VL53L1X Examples...\n");
   VL53L1_Dev_t dev;
   VL53L1_DEV Dev = &dev;
@@ -255,17 +256,20 @@ void ToF_HandleTask() {
   status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
   status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
   status = VL53L1_StartMeasurement(Dev);
-  if(status){
-		printf("VL53L1_StartMeasurement failed \n");
-		while(1);
-	}	
+  if (status)
+  {
+    printf("VL53L1_StartMeasurement failed \n");
+    while (1)
+      ;
+  }
   for (;;)
   {
     status = VL53L1_WaitMeasurementDataReady(Dev);
-    if(!status)
+    if (!status)
     {
       status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
-      if(status==0){
+      if (status == 0)
+      {
         printf("%dmm\n", RangingData.RangeMilliMeter);
         MOTOR_Rotate(pmotorX, RangingData.RangeMilliMeter);
         MOTOR_Rotate(pmotorY, RangingData.RangeMilliMeter);
@@ -278,26 +282,26 @@ void ToF_HandleTask() {
   }
 }
 
-void Message_HandleTask() {
- pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
- if(MESSAGER_Listen(pmgr) == HAL_OK)
-  DebugPrintf("UPUPUP", __FUNCTION__, __LINE__);
- else
-  DebugPrintf("Messager Listen Failed", __FUNCTION__, __LINE__);
- while(1) {
-  osDelay(100);
- }
+void Message_HandleTask()
+{
+  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+  if (MESSAGER_Listen(pmgr) != HAL_OK)
+    DebugPrintf("Messager Listen Failed", __FUNCTION__, __LINE__);
+  while (1)
+  {
+    osDelay(100);
+  }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == pmgr->huart->Instance)
+  if (huart->Instance == pmgr->huart->Instance)
     MESSAGER_TxCpltCallback(pmgr);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == pmgr->huart->Instance)
+  if (huart->Instance == pmgr->huart->Instance)
     MESSAGER_RxCpltCallback(pmgr);
 }
 /* USER CODE END Application */

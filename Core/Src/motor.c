@@ -1,5 +1,6 @@
 #include "stdlib.h"
 #include "math.h"
+#include "string.h"
 
 #include "common.h"
 #include "tmc5160.h"
@@ -10,11 +11,14 @@ HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor);
 HAL_StatusTypeDef MOTOR_SendCommand(MOTOR_Handle* const pmotor, uint8_t address, uint32_t data);
 int32_t MOTOR_ReadData(MOTOR_Handle* const pmotor, uint8_t address);
 
-MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN) {
+MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN) {
     MOTOR_Handle* pmotor = pvPortMalloc(sizeof(MOTOR_Handle));
+    memset(pmotor, 0, sizeof(MOTOR_Handle));
     pmotor->hspi = hspi;
     pmotor->csGPIO = csGPIO;
     pmotor->csPIN = csPIN;
+    pmotor->limitGPIO = limitGPIO;
+    pmotor->limitPIN = limitPIN;
     MOTOR_Reset(pmotor);
     return pmotor;
 }
@@ -43,6 +47,12 @@ HAL_StatusTypeDef MOTOR_Rotate(MOTOR_Handle* const pmotor, int16_t angle) {
 
 int16_t MOTOR_GetRotateAngle(MOTOR_Handle* const pmotor) {
     return (int16_t)(MOTOR_ReadData(pmotor, TMC5160_XACTUAL) / 142.2);
+}
+
+BOOL MOTOR_LimitCheck(MOTOR_Handle* const pmotor) {
+    if(HAL_GPIO_ReadPin(pmotor->limitGPIO, pmotor->limitPIN) == GPIO_PIN_RESET)
+        return TRUE;
+    return FALSE;
 }
 
 HAL_StatusTypeDef MOTOR_SendCommand(MOTOR_Handle* const pmotor, uint8_t address, uint32_t data) {

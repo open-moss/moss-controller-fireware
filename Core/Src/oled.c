@@ -16,11 +16,16 @@ static uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size);
 
 OLED_Handle* OLED_Init(I2C_HandleTypeDef* hi2c) {
     OLED_Handle* poled = pvPortMalloc(sizeof(OLED_Handle));
+    memset(poled, 0, sizeof(OLED_Handle));
     poled->hi2c = hi2c;
     poled->buffer = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 8);
-    for(uint8_t i = 0;i < 8;i++)
-        poled->buffer[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * 128);
-    poled->bufferFlag = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * 128);
+    memset(poled->buffer, 0, sizeof(uint8_t*) * 8);
+    for(uint8_t i = 0;i < 8;i++) {
+        poled->buffer[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * OLED_WIDTH);
+        memset(poled->buffer[i], 0, sizeof(uint8_t) * OLED_WIDTH);
+    }
+    poled->bufferFlag = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * OLED_WIDTH);
+    memset(poled->bufferFlag, 0, sizeof(uint8_t) * OLED_WIDTH);
     OLED_Close(poled);  //关闭显示器
     OLED_SendCommand(poled, 0x20);  //设置内存寻址模式Set Memory Addressing Mode
     OLED_SendCommand(poled, OLED_ADDRESSING_MODE);  // 00 水平寻址模式 01 垂直寻址模式 02 页面寻址模式(复位)
