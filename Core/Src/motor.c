@@ -80,3 +80,8 @@ int32_t MOTOR_ReadData(MOTOR_Handle* const pmotor, uint8_t address) {
     int32_t ret = (rxBuffer[1] << 24) | (rxBuffer[2] << 16) | (rxBuffer[3] << 8) | rxBuffer[4];
     return ret;
 }
+
+void MOTOR_Free(MOTOR_Handle* pmotor) {
+    vPortFree(pmotor);
+    pmotor = NULL;
+}

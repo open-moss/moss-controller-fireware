@@ -19,5 +19,6 @@ int16_t MOTOR_GetRotateAngle(MOTOR_Handle* const hmotor);
 BOOL MOTOR_LimitCheck(MOTOR_Handle* const pmotor);
 HAL_StatusTypeDef MOTOR_SendCommand(MOTOR_Handle* const hmotor, uint8_t address, uint32_t data);
 int32_t MOTOR_ReadData(MOTOR_Handle* const hmotor, uint8_t address);
+void MOTOR_Free(MOTOR_Handle* const pmotor);
 
 #endif

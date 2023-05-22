@@ -5,7 +5,9 @@
 
 #define DATA_PACKET_MAX_SIZE 128  //数据包最大大小
 #define DATA_PACKET_MIN_SIZE 10  //数据包最小大小
+#define DATA_PACKET_HEAD_SIZE 5  //数据包头大小
 #define DATA_PACKET_BODY_MAX_SIZE DATA_PACKET_MAX_SIZE - 9  //数据包主体大小
+#define DATA_PACKRT_SIGN_SIZE 4  //数据包签名大小
 #define DATA_PACKET_EOF 0x0D  //数据包结束符
 
 typedef enum {
@@ -22,7 +24,9 @@ typedef struct {
 
 uint16_t Protocol_GenerateDataPacketID(void);
 DataPacket* Protocol_BuildDataPacket(DataPacketType type, uint8_t *body, uint16_t bodySize);
-void Protocol_BuildDataPacketSign(DataPacket* pData);
-uint8_t* Protocol_DataPacketToBuffer(DataPacket* pData);
+void Protocol_DataPacketSign(DataPacket* const pData);
+uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pData);
+DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer);
+void Protocol_FreeDataPacket(DataPacket* pData);
 
 #endif

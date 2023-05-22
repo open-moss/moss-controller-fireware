@@ -37,6 +37,7 @@
 #include "motor.h"
 #include "oled.h"
 #include "messager.h"
+#include "protocol.h"
 #include "vl53l1_api.h"
 /* USER CODE END Includes */
 
@@ -66,10 +67,10 @@ OLED_Handle *poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
 
-uint8_t rxData[1] = {0};
 uint8_t rxFlag = FALSE;
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
+osMessageQId serialDataQueueHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -121,6 +122,11 @@ void MX_FREERTOS_Init(void) {
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
 
+  /* Create the queue(s) */
+  /* definition and creation of serialDataQueue */
+  osMessageQDef(serialDataQueue, 10, uint32_t);
+  serialDataQueueHandle = osMessageCreate(osMessageQ(serialDataQueue), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -158,7 +164,7 @@ void StartMainTask(void const * argument)
 
   DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);  
 
-  while (createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 640) != HAL_OK)
+  while (createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
   {
     DebugPrintf("ToF Handle Task Create Failed", __FUNCTION__, __LINE__);
     osDelay(100);
@@ -179,6 +185,9 @@ void StartMainTask(void const * argument)
   }
 
   DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
+
+  DataPacket* pData = Protocol_BuildDataPacket(Heartbeat, "65535", sizeof("65535"));
+  DebugHEXPrint(Protocol_DataPacketToBuffer(pData), pData->size, __FUNCTION__, __LINE__);
 
   for (;;)
   {
@@ -259,8 +268,7 @@ void ToF_HandleTask()
   if (status)
   {
     printf("VL53L1_StartMeasurement failed \n");
-    while (1)
-      ;
+    while (1);
   }
   for (;;)
   {

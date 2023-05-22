@@ -104,8 +104,16 @@ void Delayus(uint16_t us)
     }
 }
 
+uint8_t extractUint8High(uint16_t data) {
+    return (data >> 8) & 0xFF;
+}
+
+uint8_t extractUint8Low(uint16_t data) {
+    return data & 0xFF;
+}
+
 uint16_t mergeToUint16(uint8_t high, uint8_t low) {
-    return high >> 8 | low;
+    return (high << 8) | low;
 }
 
 /**

@@ -9,6 +9,9 @@ void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t l
 void Delayus(uint16_t us);
 uint32_t Get_System_Time(void);
 uint32_t Get_System_Time_Seconds(void);
+uint8_t* splitToDoubleUint8(uint16_t data);
+uint8_t extractUint8High(uint16_t data);
+uint8_t extractUint8Low(uint16_t data);
 uint16_t mergeToUint16(uint8_t high, uint8_t low);
 
 #define FALSE 0
