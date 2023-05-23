@@ -12,6 +12,7 @@
                 "f:\\moss-controller-fireware\\Drivers\\CMSIS\\Device\\ST\\STM32F1xx\\Include",
                 "f:\\moss-controller-fireware\\Drivers\\CMSIS\\Include",
                 "f:\\moss-controller-fireware\\Core\\Inc\\vl53l1x",
+                "f:\\moss-controller-fireware\\Core\\Inc\\u8g2",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
                 "f:\\moss-controller-fireware\\MDK-ARM",
@@ -19,7 +20,8 @@
                 "f:\\moss-controller-fireware\\Drivers\\STM32F1xx_HAL_Driver\\Src",
                 "f:\\moss-controller-fireware\\Middlewares\\Third_Party\\FreeRTOS\\Source",
                 "f:\\moss-controller-fireware\\Middlewares\\Third_Party\\FreeRTOS\\Source\\portable\\MemMang",
-                "f:\\moss-controller-fireware\\Core\\Src\\vl53l1x"
+                "f:\\moss-controller-fireware\\Core\\Src\\vl53l1x",
+                "f:\\moss-controller-fireware\\Core\\Src\\u8g2"
             ],
             "defines": [
                 "USE_HAL_DRIVER",

@@ -186,7 +186,7 @@ void StartMainTask(void const * argument)
 
   DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
 
-  DataPacket* pData = Protocol_BuildDataPacket(Heartbeat, "65535", sizeof("65535"));
+  DataPacket* pData = Protocol_BuildDataPacket(Heartbeat, "TEST", sizeof("TEST"));
   DebugHEXPrint(Protocol_DataPacketToBuffer(pData), pData->size, __FUNCTION__, __LINE__);
 
   for (;;)
@@ -223,16 +223,16 @@ void OLED_HandleTask()
   poled = OLED_Init(&OLED_HI2C);
   OLED_DrawString(poled, 0, 10, "OpenMOSS");
   OLED_DrawString(poled, 0, 20, "BOOT (FIREWARE.bin)");
-  OLED_Refresh(poled);
+  // OLED_Refresh(poled);
   for (;;)
   {
-    uint8_t str1[20];
-    uint8_t str2[20];
-    sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
-    sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
-    OLED_DrawString(poled, 0, 30, str1);
-    OLED_DrawString(poled, 0, 40, str2);
-    OLED_Refresh(poled);
+    // uint8_t str1[20];
+    // uint8_t str2[20];
+    // sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
+    // sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
+    // OLED_DrawString(poled, 0, 30, str1);
+    // OLED_DrawString(poled, 0, 40, str2);
+    // OLED_Refresh(poled);
     osDelay(100);
   }
 }
@@ -258,18 +258,20 @@ void ToF_HandleTask()
   printf("VL53L1X: %02X\n\r", wordData);
   static VL53L1_RangingMeasurementData_t RangingData;
   printf("Autonomous Ranging Test\n");
-  int status = VL53L1_WaitDeviceBooted(Dev);
-  status = VL53L1_DataInit(Dev);
-  status = VL53L1_StaticInit(Dev);
-  status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
-  status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
-  status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
-  status = VL53L1_StartMeasurement(Dev);
-  if (status)
-  {
-    printf("VL53L1_StartMeasurement failed \n");
-    while (1);
+  int status = 0;
+  do {
+    status = VL53L1_WaitDeviceBooted(Dev);
+    status = VL53L1_DataInit(Dev);
+    status = VL53L1_StaticInit(Dev);
+    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
+    status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
+    status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
+    status = VL53L1_StartMeasurement(Dev);
+    DebugPrintf("%d", __FUNCTION__, __LINE__, status);
+    osDelay(500);
   }
+  while(status != 0);
+  DebugPrintf("ToF OK", __FUNCTION__, __LINE__);
   for (;;)
   {
     status = VL53L1_WaitMeasurementDataReady(Dev);
@@ -284,6 +286,8 @@ void ToF_HandleTask()
         // printf("%d,%d,%.2f,%.2f\n", RangingData.RangeStatus,RangingData.RangeMilliMeter,
         //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
       }
+      else
+        DebugPrintf("%d", __FUNCTION__, __LINE__, status);
       status = VL53L1_ClearInterruptAndStartMeasurement(Dev);
     }
     osDelay(500);

@@ -1,248 +1,176 @@
 #include "config.h"
+#include "common.h"
 #include "oled.h"
-#include "font_lib.h"
+#include "i2c.h"
+#include "u8g2.h"
 
 #define OLED_COMMAND_ADDRESS 0x00
 #define OLED_DATA_ADDRESS 0x40
 
-HAL_StatusTypeDef OLED_Open(OLED_Handle* const poled);
-HAL_StatusTypeDef OLED_Close(OLED_Handle* const poled);
-HAL_StatusTypeDef OLED_Clear(OLED_Handle* const poled, uint8_t data);
-static HAL_StatusTypeDef OLED_SetPosition(OLED_Handle* const poled, uint8_t x, uint8_t page);
-HAL_StatusTypeDef OLED_SendCommand(OLED_Handle* const poled, uint8_t data);
-HAL_StatusTypeDef OLED_SendData(OLED_Handle* const poled, uint8_t data);
-HAL_StatusTypeDef OLED_DrawBitmap(OLED_Handle* const poled, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data);
-static uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size);
+void OLED_Open(OLED_Handle *const poled);
+void OLED_Close(OLED_Handle *const poled);
+void OLED_Clear(OLED_Handle *const poled);
+uint8_t OLED_SendData(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr);
+uint8_t OLED_Delay(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr);
 
-OLED_Handle* OLED_Init(I2C_HandleTypeDef* hi2c) {
-    OLED_Handle* poled = pvPortMalloc(sizeof(OLED_Handle));
+OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c)
+{
+    OLED_Handle *poled = pvPortMalloc(sizeof(OLED_Handle));
     memset(poled, 0, sizeof(OLED_Handle));
     poled->hi2c = hi2c;
-    poled->buffer = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 8);
-    memset(poled->buffer, 0, sizeof(uint8_t*) * 8);
-    for(uint8_t i = 0;i < 8;i++) {
-        poled->buffer[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * OLED_WIDTH);
-        memset(poled->buffer[i], 0, sizeof(uint8_t) * OLED_WIDTH);
-    }
-    poled->bufferFlag = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * OLED_WIDTH);
-    memset(poled->bufferFlag, 0, sizeof(uint8_t) * OLED_WIDTH);
-    OLED_Close(poled);  //关闭显示器
-    OLED_SendCommand(poled, 0x20);  //设置内存寻址模式Set Memory Addressing Mode
-    OLED_SendCommand(poled, OLED_ADDRESSING_MODE);  // 00 水平寻址模式 01 垂直寻址模式 02 页面寻址模式(复位)
-    OLED_SendCommand(poled, 0x81);  //设置对比度
-    OLED_SendCommand(poled, OLED_CONTRAST);  //对比度，数值越大对比度越高
-    OLED_SendCommand(poled, 0xC8);  //扫描方向 不上下翻转Com scan direction
-    OLED_SendCommand(poled, 0xA1);  //设置段重新映射 不左右翻转set segment remap
-    OLED_SendCommand(poled, 0xA8);  //设置多路复用比(1-64)
-    OLED_SendCommand(poled, 0x3F);  //设定值1/32  1/32 duty
-    OLED_SendCommand(poled, 0xD3);  //设置显示偏移 set display offset
-    OLED_SendCommand(poled, 0x00);  //
-    OLED_SendCommand(poled, 0xD5);  //设置osc分区 set osc division
-    OLED_SendCommand(poled, 0x80);  //
-    OLED_SendCommand(poled, 0xD8);  //关闭区域颜色模式 set area color mode off
-    OLED_SendCommand(poled, 0x05);  //
-    OLED_SendCommand(poled, 0xD9);  //设置预充电期 Set Pre-Charge Period
-    OLED_SendCommand(poled, 0xF1);  //
-    OLED_SendCommand(poled, 0xDA);  //设置com引脚配置 set com pin configuartion
-    OLED_SendCommand(poled, 0x12);  //
-    OLED_SendCommand(poled, 0xDB);  //设置vcomh set Vcomh
-    OLED_SendCommand(poled, 0x30);  //
-    OLED_SendCommand(poled, 0x8D);  //设置电源泵启用 set charge pump enable
-    OLED_SendCommand(poled, 0x14);  //
-    OLED_SendCommand(poled, 0xA4);  //设置全局显示  bit0，1白，0黑
-    if(OLED_INVERSE_COLOR == TRUE)
-        OLED_SendCommand(poled, 0xA7);  //反相显示
-    else
-        OLED_SendCommand(poled, 0xA6);  //正常显示
-    OLED_Clear(poled, 0x00);  //清屏
-    OLED_Open(poled);  //开启显示器
+    u8g2_t *u8g2 = pvPortMalloc(sizeof(u8g2_t));
+    memset(u8g2, 0, sizeof(u8g2_t));
+    u8g2_Setup_ssd1306_i2c_128x64_noname_f(u8g2, U8G2_R0, OLED_SendData, OLED_Delay); // 初始化u8g2
+    poled->u8g2 = u8g2;
+    u8g2_InitDisplay(poled->u8g2);     // 根据所选的芯片进行初始化工作，初始化完成后，显示器处于关闭状态
+    OLED_Open(poled);
+    OLED_Clear(poled);
+    u8g2_SetFont(poled->u8g2, u8g2_font_6x13_tf);
+    // u8g2_DrawUTF8(poled->u8g2, 0, 16, "OpenMOSS");
+    // u8g2_SendBuffer(poled->u8g2);
+    // u8g2_t u8g2;
+    // u8g2_Setup_ssd1306_i2c_128x64_noname_f(u8g2, U8G2_R0, u8x8_byte_sw_i2c, u8x8_gpio_and_delay);
+    // OLED_Close(poled);  //关闭显示器
+    // OLED_SendCommand(poled, 0x20);  //设置内存寻址模式Set Memory Addressing Mode
+    // OLED_SendCommand(poled, OLED_ADDRESSING_MODE);  // 00 水平寻址模式 01 垂直寻址模式 02 页面寻址模式(复位)
+    // OLED_SendCommand(poled, 0x81);  //设置对比度
+    // OLED_SendCommand(poled, OLED_CONTRAST);  //对比度，数值越大对比度越高
+    // OLED_SendCommand(poled, 0xC8);  //扫描方向 不上下翻转Com scan direction
+    // OLED_SendCommand(poled, 0xA1);  //设置段重新映射 不左右翻转set segment remap
+    // OLED_SendCommand(poled, 0xA8);  //设置多路复用比(1-64)
+    // OLED_SendCommand(poled, 0x3F);  //设定值1/32  1/32 duty
+    // OLED_SendCommand(poled, 0xD3);  //设置显示偏移 set display offset
+    // OLED_SendCommand(poled, 0x00);  //
+    // OLED_SendCommand(poled, 0xD5);  //设置osc分区 set osc division
+    // OLED_SendCommand(poled, 0x80);  //
+    // OLED_SendCommand(poled, 0xD8);  //关闭区域颜色模式 set area color mode off
+    // OLED_SendCommand(poled, 0x05);  //
+    // OLED_SendCommand(poled, 0xD9);  //设置预充电期 Set Pre-Charge Period
+    // OLED_SendCommand(poled, 0xF1);  //
+    // OLED_SendCommand(poled, 0xDA);  //设置com引脚配置 set com pin configuartion
+    // OLED_SendCommand(poled, 0x12);  //
+    // OLED_SendCommand(poled, 0xDB);  //设置vcomh set Vcomh
+    // OLED_SendCommand(poled, 0x30);  //
+    // OLED_SendCommand(poled, 0x8D);  //设置电源泵启用 set charge pump enable
+    // OLED_SendCommand(poled, 0x14);  //
+    // OLED_SendCommand(poled, 0xA4);  //设置全局显示  bit0，1白，0黑
+    // if(OLED_INVERSE_COLOR == TRUE)
+    //     OLED_SendCommand(poled, 0xA7);  //反相显示
+    // else
+    //     OLED_SendCommand(poled, 0xA6);  //正常显示
+    // OLED_Clear(poled, 0x00);  //清屏
+    // OLED_Open(poled);  //开启显示器
     return poled;
 }
 
-/**
- * 开启OLED屏幕
- */
-HAL_StatusTypeDef OLED_Open(OLED_Handle* const poled) {
-    return OLED_SendCommand(poled, 0xAF);
+void OLED_Open(OLED_Handle *const poled)
+{
+    u8g2_SetPowerSave(poled->u8g2, 0);
 }
 
-/**
- * 关闭OLED屏幕
- */
-HAL_StatusTypeDef OLED_Close(OLED_Handle* const poled) {
-    return OLED_SendCommand(poled, 0xAE);
+void OLED_Close(OLED_Handle *const poled)
+{
+    u8g2_SetPowerSave(poled->u8g2, 1);
 }
 
 /**
  * 清空OLED屏幕
  */
-HAL_StatusTypeDef OLED_Clear(OLED_Handle* const poled, uint8_t data) {
-    uint16_t i;
-    OLED_SetPosition(poled, 0, 0);
-    for (i = 0; i < 8 * OLED_WIDTH; i++)
-        OLED_SendData(poled, data);
-    //更新缓存
-    memset(poled->buffer, data, sizeof(poled->buffer));
-    memset(poled->bufferFlag, 0, sizeof(poled->bufferFlag));
-    return HAL_OK;
+void OLED_Clear(OLED_Handle *const poled)
+{
+    u8g2_ClearBuffer(poled->u8g2);
+    u8g2_SendBuffer(poled->u8g2);
 }
 
-static HAL_StatusTypeDef OLED_SetVerticalPosition(OLED_Handle* const poled, uint8_t x, uint8_t up, uint8_t down) {
-    OLED_SendCommand(poled, 0x22);  //设置页地址
-    OLED_SendCommand(poled, up);    //起始
-    OLED_SendCommand(poled, down);  //结束
-    OLED_SendCommand(poled, 0x21);  //设置列地址
-    OLED_SendCommand(poled, x);     //起始
-    OLED_SendCommand(poled, 0x7F);  //结束
-    return HAL_OK;
+void OLED_DrawString(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t *const str)
+{
+    u8g2_DrawStr(poled->u8g2, x, y, (const char *)str);
+    u8g2_SendBuffer(poled->u8g2);
 }
 
-static HAL_StatusTypeDef OLED_SetPosition(OLED_Handle* const poled, uint8_t x, uint8_t page) {
-    return OLED_SetVerticalPosition(poled, x, page, 0x07);
-}
+uint8_t OLED_SendData(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr)
+{
+    static uint8_t buffer[128];
+    static uint8_t bufferIndex;
+    uint8_t *data;
 
-static HAL_StatusTypeDef OLED_AreaRefresh(OLED_Handle* const poled, uint8_t l, uint8_t r) {
-    uint8_t count = 0, i, up = 0, down = 7, x, page;
+    switch (msg)
+    {
 
-    for (i = l; i <= r; i++) count |= poled->bufferFlag[i];
-
-    while (!(count & (1 << up))) up++;
-
-    while (!(count & (1 << down))) down--;
-
-    OLED_SetVerticalPosition(poled, l, up, down);
-
-    for (x = l; x <= r; x++)
-        for (page = up; page <= down; page++)
-            OLED_SendData(poled, poled->buffer[page][x]);
-
-    memset(poled->bufferFlag + l, 0, r - l + 1);
-    return HAL_OK;
-}
-
-HAL_StatusTypeDef OLED_Refresh(OLED_Handle* const poled) {
-    uint8_t l = 0, r;
-
-    while (l <= OLED_WIDTH) {
-        while (l <= OLED_WIDTH && !poled->bufferFlag[l]) l++;
-
-        r = l;
-        while (r <= OLED_WIDTH && poled->bufferFlag[r]) r++;
-        r--;
-
-        if (l <= OLED_WIDTH) OLED_AreaRefresh(poled, l, r);
-
-        l = r + 1;
+    case U8X8_MSG_BYTE_START_TRANSFER:
+    {
+        bufferIndex = 0;
     }
-    return HAL_OK;
-}
+    break;
 
-/**
- * 发送命令
- */
-HAL_StatusTypeDef OLED_SendCommand(OLED_Handle* const poled, uint8_t data) {
-    return HAL_I2C_Mem_Write(poled->hi2c, OLED_I2C_ADDRESS, OLED_COMMAND_ADDRESS, I2C_MEMADD_SIZE_8BIT, &data, 1, 0xff);
-}
+    case U8X8_MSG_BYTE_SEND:
+    {
+        data = (uint8_t *)argPtr;
 
-/**
- * 发送数据
- */
-HAL_StatusTypeDef OLED_SendData(OLED_Handle* const poled, uint8_t data) {
-    return HAL_I2C_Mem_Write(poled->hi2c, OLED_I2C_ADDRESS, OLED_DATA_ADDRESS, I2C_MEMADD_SIZE_8BIT, &data, 1, 0xff);
-}
-
-HAL_StatusTypeDef OLED_DrawColumn(OLED_Handle* const poled, uint8_t x, uint8_t y, uint8_t *data, uint8_t size, uint8_t bool) {
-    if (x >= OLED_WIDTH || y + size > OLED_HEIGHT) return HAL_ERROR;
-    uint8_t pos = 0;
-    while (size > 0) {
-        uint8_t data_n = poled->buffer[y / 8][x], delta;
-
-        if (bool == OLED_BOOL_Replace)
-            if (8 - (y % 8) >= size) {
-                data_n = data_n - (data_n & ((0xff & (0xff << (8 - size))) >>
-                                             (8 - size - (y % 8))));
-                data_n |= getInt8Data(data, pos, size) << (y % 8);
-                delta = size;
-            } else {
-                data_n = data_n - (data_n & (0xff << (y % 8)));
-                data_n |= getInt8Data(data, pos, 8 - (y % 8)) << (y % 8);
-                delta = 8 - (y % 8);
-            }
-        else if (bool == OLED_BOOL_ADD)
-            if (8 - (y % 8) >= size) {
-                data_n |= getInt8Data(data, pos, size) << (y % 8);
-                delta = size;
-            } else {
-                data_n |= getInt8Data(data, pos, 8 - (y % 8)) << (y % 8);
-                delta = 8 - (y % 8);
-            }
-        else if (bool == OLED_BOOL_Subtract)
-            if (8 - (y % 8) >= size) {
-                data_n &= ~(getInt8Data(data, pos, size) << (y % 8));
-                delta = size;
-            } else {
-                data_n &= ~(getInt8Data(data, pos, 8 - (y % 8)) << (y % 8));
-                delta = 8 - (y % 8);
-            }
-
-        if (data_n != poled->buffer[y / 8][x])
-            poled->bufferFlag[x] |= 1 << (y / 8);
-        poled->buffer[y / 8][x] = data_n;
-
-        size -= delta;
-        y += delta;
-        pos += delta;
-    }
-
-    return HAL_OK;
-}
-
-HAL_StatusTypeDef OLED_DrawChar(OLED_Handle* const poled, uint8_t x, uint8_t y, uint8_t c) {
-    return OLED_DrawBitmap(poled, x, y, 6, 8, ((uint8_t *)F6X8) + 6 * (c - 32));
-}
-
-HAL_StatusTypeDef OLED_DrawString(OLED_Handle* const poled, uint8_t x, uint8_t y, uint8_t *str) {
-    uint16_t i = 0;
-
-    uint8_t ret = 0;
-
-    while (str[i] != '\0') {
-        if (x + 5 >= OLED_WIDTH) {
-            x = 0;
-            y += 8;
+        while (argInt > 0)
+        {
+            buffer[bufferIndex++] = *data;
+            data++;
+            argInt--;
         }
+    }
+    break;
 
-        ret |= OLED_DrawChar(poled, x, y, str[i]);
+    case U8X8_MSG_BYTE_END_TRANSFER:
+    {
+        if (HAL_I2C_Master_Transmit(&OLED_HI2C, OLED_I2C_ADDRESS, buffer, bufferIndex, 1000) != HAL_OK)
+            return 0;
+    }
+    break;
 
-        x += 6;
-        i++;
+    case U8X8_MSG_BYTE_SET_DC:
+        break;
+
+    default:
+        return 0;
     }
 
-    return ret ? HAL_ERROR : HAL_OK;
+    return 1;
 }
 
-HAL_StatusTypeDef OLED_DrawBitmap(OLED_Handle* const poled, uint8_t x, uint8_t y, uint8_t width, uint8_t high, uint8_t *data) {
-    uint8_t ret = 0;
-    while (width > 0) {
-        ret |= OLED_DrawColumn(poled, x, y, data, high, OLED_BOOL_Replace);
-        data += (high + 7) / 8;
-        width--;
-        x++;
+uint8_t OLED_Delay(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr)
+{
+    switch (msg)
+    {
+    case U8X8_MSG_DELAY_100NANO: // delay argInt * 100 nano seconds
+        __NOP();
+        break;
+    case U8X8_MSG_DELAY_10MICRO: // delay argInt * 10 micro seconds
+        for (uint16_t n = 0; n < 320; n++)
+        {
+            __NOP();
+        }
+        break;
+    case U8X8_MSG_DELAY_MILLI: // delay argInt * 1 milli second
+        osDelay(1);
+        break;
+    case U8X8_MSG_DELAY_I2C: // argInt is the I2C speed in 100KHz, e.g. 4 = 400 KHz
+        delayUs(5);
+        break;                    // argInt=1: delay by 5us, argInt = 4: delay by 1.25us
+    case U8X8_MSG_GPIO_I2C_CLOCK: // argInt=0: Output low at I2C clock pin
+        break;                    // argInt=1: Input dir with pullup high for I2C clock pin
+    case U8X8_MSG_GPIO_I2C_DATA:  // argInt=0: Output low at I2C data pin
+        break;                    // argInt=1: Input dir with pullup high for I2C data pin
+    case U8X8_MSG_GPIO_MENU_SELECT:
+        u8x8_SetGPIOResult(u8x8, /* get menu select pin state */ 0);
+        break;
+    case U8X8_MSG_GPIO_MENU_NEXT:
+        u8x8_SetGPIOResult(u8x8, /* get menu next pin state */ 0);
+        break;
+    case U8X8_MSG_GPIO_MENU_PREV:
+        u8x8_SetGPIOResult(u8x8, /* get menu prev pin state */ 0);
+        break;
+    case U8X8_MSG_GPIO_MENU_HOME:
+        u8x8_SetGPIOResult(u8x8, /* get menu home pin state */ 0);
+        break;
+    default:
+        u8x8_SetGPIOResult(u8x8, 1); // default return value
+        break;
     }
-
-    return ret ? HAL_ERROR : HAL_OK;
-}
-
-static uint8_t getInt8Data(uint8_t *data, uint8_t start, uint8_t size) {
-    uint8_t ret = 0, delta;
-
-    ret = data[start / 8] >> (start % 8);
-    delta = 8 - (start % 8);
-    size -= delta;
-    start += delta;
-
-    if (((int8_t)size) <= 0)
-        return ret & (0xFF >> (-((int8_t)size)));
-    else
-        return ret | (getInt8Data(data, start, size) << delta);
+    return 1;
 }

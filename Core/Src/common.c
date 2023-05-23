@@ -84,12 +84,12 @@ HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, ui
  * 
  * @param [in] us 微秒
  */
-void Delayus(uint16_t us)
+void delayUs(uint16_t us)
 {
     uint16_t differ = 0xffff - us - 5;
     if (HAL_TIM_Base_Start_IT(DELAY_US_TIMER) != HAL_OK)
     {
-        DebugPrintf("Delayus Failed", __FUNCTION__, __LINE__);
+        DebugPrintf("delayUs Failed", __FUNCTION__, __LINE__);
         return;
     }
     __HAL_TIM_SetCounter(DELAY_US_TIMER, differ);
@@ -99,7 +99,7 @@ void Delayus(uint16_t us)
     }
     if (HAL_TIM_Base_Stop_IT(DELAY_US_TIMER) != HAL_OK)
     {
-        DebugPrintf("Delayus Failed", __FUNCTION__, __LINE__);
+        DebugPrintf("delayUs Failed", __FUNCTION__, __LINE__);
         return;
     }
 }
