@@ -74,7 +74,11 @@ DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
     pData->type = (DataPacketType)buffer[0];  //数据包类型
     pData->size = mergeToUint16(buffer[1], buffer[2]);  //数据包大小
     pData->id = mergeToUint16(buffer[3], buffer[4]);  //数据包ID
+    pData->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
+    memset(pData->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
     memcpy(pData->body, buffer + DATA_PACKET_HEAD_SIZE, pData->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据
+    pData->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
+    memset(pData->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
     memcpy(pData->sign, buffer + (pData->size - DATA_PACKET_HEAD_SIZE), DATA_PACKRT_SIGN_SIZE);  //拷贝签名数据
     return pData;
 }

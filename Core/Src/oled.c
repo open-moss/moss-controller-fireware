@@ -26,40 +26,6 @@ OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c)
     OLED_Open(poled);
     OLED_Clear(poled);
     u8g2_SetFont(poled->u8g2, u8g2_font_6x13_tf);
-    // u8g2_DrawUTF8(poled->u8g2, 0, 16, "OpenMOSS");
-    // u8g2_SendBuffer(poled->u8g2);
-    // u8g2_t u8g2;
-    // u8g2_Setup_ssd1306_i2c_128x64_noname_f(u8g2, U8G2_R0, u8x8_byte_sw_i2c, u8x8_gpio_and_delay);
-    // OLED_Close(poled);  //关闭显示器
-    // OLED_SendCommand(poled, 0x20);  //设置内存寻址模式Set Memory Addressing Mode
-    // OLED_SendCommand(poled, OLED_ADDRESSING_MODE);  // 00 水平寻址模式 01 垂直寻址模式 02 页面寻址模式(复位)
-    // OLED_SendCommand(poled, 0x81);  //设置对比度
-    // OLED_SendCommand(poled, OLED_CONTRAST);  //对比度，数值越大对比度越高
-    // OLED_SendCommand(poled, 0xC8);  //扫描方向 不上下翻转Com scan direction
-    // OLED_SendCommand(poled, 0xA1);  //设置段重新映射 不左右翻转set segment remap
-    // OLED_SendCommand(poled, 0xA8);  //设置多路复用比(1-64)
-    // OLED_SendCommand(poled, 0x3F);  //设定值1/32  1/32 duty
-    // OLED_SendCommand(poled, 0xD3);  //设置显示偏移 set display offset
-    // OLED_SendCommand(poled, 0x00);  //
-    // OLED_SendCommand(poled, 0xD5);  //设置osc分区 set osc division
-    // OLED_SendCommand(poled, 0x80);  //
-    // OLED_SendCommand(poled, 0xD8);  //关闭区域颜色模式 set area color mode off
-    // OLED_SendCommand(poled, 0x05);  //
-    // OLED_SendCommand(poled, 0xD9);  //设置预充电期 Set Pre-Charge Period
-    // OLED_SendCommand(poled, 0xF1);  //
-    // OLED_SendCommand(poled, 0xDA);  //设置com引脚配置 set com pin configuartion
-    // OLED_SendCommand(poled, 0x12);  //
-    // OLED_SendCommand(poled, 0xDB);  //设置vcomh set Vcomh
-    // OLED_SendCommand(poled, 0x30);  //
-    // OLED_SendCommand(poled, 0x8D);  //设置电源泵启用 set charge pump enable
-    // OLED_SendCommand(poled, 0x14);  //
-    // OLED_SendCommand(poled, 0xA4);  //设置全局显示  bit0，1白，0黑
-    // if(OLED_INVERSE_COLOR == TRUE)
-    //     OLED_SendCommand(poled, 0xA7);  //反相显示
-    // else
-    //     OLED_SendCommand(poled, 0xA6);  //正常显示
-    // OLED_Clear(poled, 0x00);  //清屏
-    // OLED_Open(poled);  //开启显示器
     return poled;
 }
 

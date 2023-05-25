@@ -1,10 +1,12 @@
 #ifndef OLED_H
 #define OLED_H
 
-#include <string.h>
-#include "stm32f1xx_hal.h"
+#include "string.h"
 #include "stm32f1xx_hal_i2c.h"
+
 #include "u8g2.h"
+
+#include "common.h"
 
 #define CmdReg 0x00  // 表示发送指令
 #define DataReg 0x40 // 表示发送数据

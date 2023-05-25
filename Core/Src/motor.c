@@ -1,11 +1,11 @@
 #include "stdlib.h"
 #include "math.h"
 #include "string.h"
+#include "spi.h"
 
 #include "common.h"
 #include "tmc5160.h"
 #include "motor.h"
-#include "spi.h"
 
 HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor);
 HAL_StatusTypeDef MOTOR_SendCommand(MOTOR_Handle* const pmotor, uint8_t address, uint32_t data);

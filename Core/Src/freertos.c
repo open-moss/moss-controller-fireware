@@ -38,6 +38,7 @@
 #include "oled.h"
 #include "messager.h"
 #include "protocol.h"
+#include "tof.h"
 #include "vl53l1_api.h"
 /* USER CODE END Includes */
 
@@ -185,9 +186,6 @@ void StartMainTask(void const * argument)
   }
 
   DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
-
-  DataPacket* pData = Protocol_BuildDataPacket(Heartbeat, "TEST", sizeof("TEST"));
-  DebugHEXPrint(Protocol_DataPacketToBuffer(pData), pData->size, __FUNCTION__, __LINE__);
 
   for (;;)
   {
