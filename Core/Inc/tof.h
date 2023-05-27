@@ -4,7 +4,7 @@
 #include "common.h"
 
 typedef struct {
-    I2C_HandleTypeDef *hi2c;
+    VL53L1_Dev_t *pdevice;
 } ToF_Handle;
 
 ToF_Handle* ToF_Init(I2C_HandleTypeDef* hi2c);

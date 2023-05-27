@@ -11,7 +11,7 @@
 
 #define FIREWARE_VERSION "1.0.0"
 #define DOG_FEED_INTERVAL 6000  //喂狗间隔时间（毫秒）
-#define DELAY_US_TIMER  &htim2  //微秒级延迟时钟
+#define DELAY_US_TIMER  htim2  //微秒级延迟时钟
 #define DEBUG_MODE TRUE  //是否开启调试模式
 
 /**
@@ -22,7 +22,7 @@
 #define OLED_CONTRAST 255  //屏幕对比度（0-255）
 #define OLED_INVERSE_COLOR FALSE  //是否反色显示
 #define OLED_ADDRESSING_MODE 1  //寻址模式 0 水平 1 垂直 2 复位
-#define OLED_HI2C hi2c1 //I2C句柄
+#define OLED_HI2C hi2c1  //I2C句柄
 #define OLED_I2C_ADDRESS 0x78  //I2C设备地址
 #define OLED_I2C_CLOCK_SPEED 400  //I2C时钟周期（KHZ）
 
@@ -60,5 +60,11 @@
 #define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小
 #define EXTENDS_SERIAL_PORT_HUART huart3  //扩展串口UART句柄
 #define EXTENDS_SERIAL_PORT_BUFFER_MAX_SIZE 128  //扩展串口缓冲区最大大小
+
+/**
+ * 激光测距配置
+ */
+#define TOF_HI2C hi2c2  //I2C句柄
+#define TOF_I2C_ADDRESS 0x78  //I2C设备地址
 
 #endif
