@@ -36,6 +36,7 @@
 #include "string.h"
 #include "motor.h"
 #include "oled.h"
+#include "logger.h"
 #include "messager.h"
 #include "protocol.h"
 #include "tof.h"
@@ -157,35 +158,37 @@ void StartMainTask(void const * argument)
 
   /* Infinite loop */
 
+  logInfo("HELLO WORLD");
+
   while (createTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
   {
-    DebugPrintf("MOTOR Handle Task Create Failed", __FUNCTION__, __LINE__);
+    logInfo("MOTOR Handle Task Create Failed");
     osDelay(100);
   }
 
-  DebugPrintf("MOTOR Handle Task Created", __FUNCTION__, __LINE__);  
+  logInfo("MOTOR Handle Task Created");  
 
   while (createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
   {
-    DebugPrintf("ToF Handle Task Create Failed", __FUNCTION__, __LINE__);
+    logInfo("ToF Handle Task Create Failed");
     osDelay(100);
   }
 
-  DebugPrintf("ToF Handle Task Created", __FUNCTION__, __LINE__);
+  logInfo("ToF Handle Task Created");
 
   while (createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK)
   {
-    DebugPrintf("Message Handle Task Create Failed", __FUNCTION__, __LINE__);
+    logInfo("Message Handle Task Create Failed");
     osDelay(100);
   }
 
   while (createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK)
   {
-    DebugPrintf("OLED Handle Task Create Failed", __FUNCTION__, __LINE__);
+    logInfo("OLED Handle Task Create Failed");
     osDelay(100);
   }
 
-  DebugPrintf("OLED Handle Task Created", __FUNCTION__, __LINE__);
+  logInfo("OLED Handle Task Created");
 
   for (;;)
   {
@@ -209,9 +212,9 @@ void MOTOR_HandleTask()
   for (;;)
   {
     if (MOTOR_LimitCheck(pmotorX))
-      DebugPrintf("X MOTOR LIMIT!", __FUNCTION__, __LINE__);
+      logInfo("X MOTOR LIMIT!");
     if (MOTOR_LimitCheck(pmotorY))
-      DebugPrintf("Y MOTOR LIMIT!", __FUNCTION__, __LINE__);
+      logInfo("Y MOTOR LIMIT!");
     osDelay(500);
   }
 }
@@ -265,11 +268,11 @@ void ToF_HandleTask()
     status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
     status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
     status = VL53L1_StartMeasurement(Dev);
-    DebugPrintf("%d", __FUNCTION__, __LINE__, status);
+    logInfo("%d", status);
     osDelay(500);
   }
   while(status != 0);
-  DebugPrintf("ToF OK", __FUNCTION__, __LINE__);
+  logInfo("ToF OK");
   for (;;)
   {
     status = VL53L1_WaitMeasurementDataReady(Dev);
@@ -285,7 +288,7 @@ void ToF_HandleTask()
         //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
       }
       else
-        DebugPrintf("%d", __FUNCTION__, __LINE__, status);
+        logInfo("%d", status);
       status = VL53L1_ClearInterruptAndStartMeasurement(Dev);
     }
     osDelay(500);
@@ -296,7 +299,7 @@ void Message_HandleTask()
 {
   pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (MESSAGER_Listen(pmgr) != HAL_OK)
-    DebugPrintf("Messager Listen Failed", __FUNCTION__, __LINE__);
+    logError("Messager Listen Failed");
   while (1)
   {
     osDelay(100);

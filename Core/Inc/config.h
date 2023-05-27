@@ -12,6 +12,7 @@
 #define FIREWARE_VERSION "1.0.0"
 #define DOG_FEED_INTERVAL 6000  //喂狗间隔时间（毫秒）
 #define DELAY_US_TIMER  &htim2  //微秒级延迟时钟
+#define DEBUG_MODE TRUE  //是否开启调试模式
 
 /**
  * OLED屏幕配置 

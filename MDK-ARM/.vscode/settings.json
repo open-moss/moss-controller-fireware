@@ -27,7 +27,8 @@
         "stm32f1xx_hal_uart.h": "c",
         "string": "c",
         "xstring": "c",
-        "crc32.h": "c"
+        "crc32.h": "c",
+        "logger.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.encoding": "utf8"

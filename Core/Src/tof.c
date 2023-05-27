@@ -11,3 +11,5 @@ ToF_Handle* TOF_Init(I2C_HandleTypeDef* hi2c) {
     memset(ptof, 0, sizeof(ToF_Handle));
     return ptof;
 }
+
+

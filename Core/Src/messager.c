@@ -107,5 +107,5 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         }
         osDelay(50);
     }
-    DebugPrintfISR("%02X", __FUNCTION__, __LINE__, c);
+    printHEX("%02X", c);
 }

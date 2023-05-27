@@ -3,9 +3,6 @@
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
 
-void DebugPrintf(const char *format, const char name[17], uint32_t line, ...);
-void DebugPrintfISR(const char *format, const char name[17], uint32_t line, ...);
-void DebugHEXPrint(uint8_t *buff, uint32_t size, const char name[17], uint32_t line);
 void delayUs(uint16_t us);
 uint32_t Get_System_Time(void);
 uint32_t Get_System_Time_Seconds(void);
