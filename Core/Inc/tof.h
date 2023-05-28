@@ -15,6 +15,6 @@ typedef struct {
 
 ToF_Handle* ToF_Init(I2C_HandleTypeDef* hi2c);
 ToF_Info* ToF_GetDeviceInfo(ToF_Handle* const ptof);
-
+int16_t ToF_GetRangeMilliMeter(ToF_Handle* const ptof);
 
 #endif

@@ -487,6 +487,11 @@
               <FileType>1</FileType>
               <FilePath>..\Core\Src\logger.c</FilePath>
             </File>
+            <File>
+              <FileName>device.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\device.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -6,6 +6,8 @@
 #include "common.h"
 #include "tof.h"
 
+VL53L1_RangingMeasurementData_t* ToF_GetRangingMeasurementData(ToF_Handle* const ptof);
+
 ToF_Handle* ToF_Init(I2C_HandleTypeDef* hi2c) {
     ToF_Handle *ptof = pvPortMalloc(sizeof(ToF_Handle));
     memset(ptof, 0, sizeof(ToF_Handle));
@@ -36,4 +38,19 @@ ToF_Info* ToF_GetDeviceInfo(ToF_Handle* const ptof) {
     return pinfo;
 }
 
+int16_t ToF_GetRangeMilliMeter(ToF_Handle* const ptof) {
+    VL53L1_RangingMeasurementData_t *prangingData = ToF_GetRangingMeasurementData(ptof);
+    if(prangingData != NULL)
+        return NULL;
+    return prangingData->RangeMilliMeter;
+}
 
+VL53L1_RangingMeasurementData_t* ToF_GetRangingMeasurementData(ToF_Handle* const ptof) {
+    static VL53L1_RangingMeasurementData_t rangingData;
+    VL53L1_Error status = VL53L1_WaitMeasurementDataReady(ptof->pdevice) || 
+    VL53L1_GetRangingMeasurementData(ptof->pdevice, &rangingData) ||
+    VL53L1_ClearInterruptAndStartMeasurement(ptof->pdevice);
+    if(status != VL53L1_ERROR_NONE)
+        return NULL;
+    return &rangingData;
+}

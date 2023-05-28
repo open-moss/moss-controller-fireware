@@ -27,19 +27,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "config.h"
-#include "spi.h"
-#include "i2c.h"
-#include "usart.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
 #include "motor.h"
 #include "oled.h"
 #include "logger.h"
 #include "messager.h"
 #include "protocol.h"
 #include "tof.h"
-#include "vl53l1_api.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,7 +61,6 @@ OLED_Handle *poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
 
-uint8_t rxFlag = FALSE;
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
 osMessageQId serialDataQueueHandle;
@@ -256,28 +248,11 @@ void ToF_HandleTask()
   uint8_t temp[2];
   Uint16ToUint8Array(pinfo->wordData, temp);
   PrintHEX(temp, 2);
-  static VL53L1_RangingMeasurementData_t RangingData;
-  printf("Autonomous Ranging Test\n");
-  int status = 0;
-  LogInfo("ToF OK");
-  for (;;)
-  {
-    status = VL53L1_WaitMeasurementDataReady(ptof->pdevice);
-    if (!status)
-    {
-      status = VL53L1_GetRangingMeasurementData(ptof->pdevice, &RangingData);
-      if (status == 0)
-      {
-        printf("%dmm\n", RangingData.RangeMilliMeter);
-        MOTOR_Rotate(pmotorX, RangingData.RangeMilliMeter);
-        MOTOR_Rotate(pmotorY, RangingData.RangeMilliMeter);
-        // printf("%d,%d,%.2f,%.2f\n", RangingData.RangeStatus,RangingData.RangeMilliMeter,
-        //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
-      }
-      else
-        LogInfo("%d", status);
-      status = VL53L1_ClearInterruptAndStartMeasurement(ptof->pdevice);
-    }
+  while(1) {
+    int16_t range = ToF_GetRangeMilliMeter(ptof);
+    MOTOR_Rotate(pmotorX, range);
+    MOTOR_Rotate(pmotorY, range);
+    LogInfo("%dmm", range);
     osDelay(500);
   }
 }
@@ -287,8 +262,7 @@ void Message_HandleTask()
   pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (MESSAGER_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
-  while (1)
-  {
+  while (1) {
     osDelay(100);
   }
 }

@@ -2,7 +2,9 @@
 #define CONFIG_H
 
 #include "common.h"
+#include "i2c.h"
 #include "spi.h"
+#include "usart.h"
 #include "tim.h"
 
 /**
@@ -13,6 +15,22 @@
 #define DOG_FEED_INTERVAL 6000  //喂狗间隔时间（毫秒）
 #define DELAY_US_TIMER  htim2  //微秒级延迟时钟
 #define DEBUG_MODE TRUE  //是否开启调试模式
+
+/**
+ * 设备配置 
+ */
+#define POWER3V3_GPIO_PORT GPIOC  //3V3电源GPIO
+#define POWER3V3_PIN GPIO_PIN_9 //3V3电源GPIO PIN
+#define POWER5V_GPIO_PORT GPIOC  //5V电源GPIO
+#define POWER5V_PIN GPIO_PIN_8  //5V电源GPIO PIN
+#define LASER_GPIO_PORT GPIOC  //激光灯GPIO
+#define LASER_PIN GPIO_PIN_2  //激光灯GPIO_PIN
+#define DATALIGHT_GPIO_PORT GPIOC  //数据灯GPIO
+#define DATALIGHT_PIN GPIO_PIN_3  //数据灯GPIO PIN
+#define STATUS_RED_LED_GPIO_PORT GPIOC  //红状态灯GPIO
+#define STATUS_RED_LED_PIN GPIO_PIN_5  //红状态灯GPIO PIN
+#define STATUS_BLUE_LED_GPIO_PORT GPIOB  //蓝状态灯GPIO
+#define STATUS_BLUE_LED_PIN GPIO_PIN_0  //蓝状态灯GPIO PIN
 
 /**
  * OLED屏幕配置 
