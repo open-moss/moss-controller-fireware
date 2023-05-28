@@ -58,10 +58,10 @@ void Protocol_DataPacketSign(DataPacket* const pData) {
 uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pData) {
     uint8_t* buffer = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_MAX_SIZE);
     buffer[0] = pData->type;  //数据包类型
-    buffer[1] = extractUint8High(pData->size);  //数据包大小高8位
-    buffer[2] = extractUint8Low(pData->size);  //数据包大小低8位
-    buffer[3] = extractUint8High(pData->id);  //数据包ID高8位
-    buffer[4] = extractUint8Low(pData->id);  //数据包ID低8位
+    buffer[1] = ExtractUint8High(pData->size);  //数据包大小高8位
+    buffer[2] = ExtractUint8Low(pData->size);  //数据包大小低8位
+    buffer[3] = ExtractUint8High(pData->id);  //数据包ID高8位
+    buffer[4] = ExtractUint8Low(pData->id);  //数据包ID低8位
     uint16_t bodySize = pData->size - DATA_PACKET_MIN_SIZE;  //数据包主体大小
     memcpy(buffer + DATA_PACKET_HEAD_SIZE, pData->body, bodySize);  //数据包主体数据
     buffer[pData->size - 1] = DATA_PACKET_EOF;  //数据包结尾
@@ -72,8 +72,8 @@ DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
     DataPacket* pData = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
     memset(pData, 0, sizeof(DataPacket));
     pData->type = (DataPacketType)buffer[0];  //数据包类型
-    pData->size = mergeToUint16(buffer[1], buffer[2]);  //数据包大小
-    pData->id = mergeToUint16(buffer[3], buffer[4]);  //数据包ID
+    pData->size = MergeToUint16(buffer[1], buffer[2]);  //数据包大小
+    pData->id = MergeToUint16(buffer[3], buffer[4]);  //数据包ID
     pData->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
     memset(pData->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
     memcpy(pData->body, buffer + DATA_PACKET_HEAD_SIZE, pData->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据

@@ -2,12 +2,13 @@
 #include "string.h"
 #include "usart.h"
 #include "semphr.h"
+#include "cmsis_os.h"
 
 #include "common.h"
 #include "config.h"
 #include "protocol.h"
 #include "messager.h"
-#include "cmsis_os.h"
+#include "logger.h"
 
 extern osMessageQId serialDataQueueHandle;
 
@@ -82,7 +83,7 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         if (rxBuffer->index + 1 > rxBuffer->size)
             MESSAGER_RxBufferClear(pmgr);
         if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 3)
-            rxBuffer->receiveSize = mergeToUint16(rxBuffer->data[1], rxBuffer->data[2]); // 从包头获取数据大小
+            rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[1], rxBuffer->data[2]); // 从包头获取数据大小
         if (rxBuffer->index + 1 < rxBuffer->receiveSize)
             rxBuffer->data[rxBuffer->index++] = c; // 追加字符
         else if (rxBuffer->index + 1 >= DATA_PACKET_MIN_SIZE)
@@ -107,5 +108,5 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         }
         osDelay(50);
     }
-    printHEX("%02X", c);
+    PrintHEX(rxBuffer->temp, 1);
 }

@@ -31,7 +31,6 @@
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdarg.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/

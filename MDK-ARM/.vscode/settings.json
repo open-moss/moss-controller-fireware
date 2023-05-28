@@ -28,7 +28,9 @@
         "string": "c",
         "xstring": "c",
         "crc32.h": "c",
-        "logger.h": "c"
+        "logger.h": "c",
+        "stdarg.h": "c",
+        "tof.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.encoding": "utf8"

@@ -32,7 +32,6 @@
 #include "usart.h"
 #include "stdio.h"
 #include "stdlib.h"
-#include "stdarg.h"
 #include "string.h"
 #include "motor.h"
 #include "oled.h"
@@ -158,37 +157,35 @@ void StartMainTask(void const * argument)
 
   /* Infinite loop */
 
-  logInfo("HELLO WORLD");
-
-  while (createTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
+  while (CreateTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
   {
-    logInfo("MOTOR Handle Task Create Failed");
+    LogInfo("MOTOR Handle Task Create Failed");
     osDelay(100);
   }
 
-  logInfo("MOTOR Handle Task Created");  
+  LogInfo("MOTOR Handle Task Created");  
 
-  while (createTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
+  while (CreateTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
   {
-    logInfo("ToF Handle Task Create Failed");
+    LogInfo("ToF Handle Task Create Failed");
     osDelay(100);
   }
 
-  logInfo("ToF Handle Task Created");
+  LogInfo("ToF Handle Task Created");
 
-  while (createTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK)
+  while (CreateTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK)
   {
-    logInfo("Message Handle Task Create Failed");
+    LogInfo("Message Handle Task Create Failed");
     osDelay(100);
   }
 
-  while (createTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK)
+  while (CreateTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK)
   {
-    logInfo("OLED Handle Task Create Failed");
+    LogInfo("OLED Handle Task Create Failed");
     osDelay(100);
   }
 
-  logInfo("OLED Handle Task Created");
+  LogInfo("OLED Handle Task Created");
 
   for (;;)
   {
@@ -212,9 +209,9 @@ void MOTOR_HandleTask()
   for (;;)
   {
     if (MOTOR_LimitCheck(pmotorX))
-      logInfo("X MOTOR LIMIT!");
+      LogInfo("X MOTOR LIMIT!");
     if (MOTOR_LimitCheck(pmotorY))
-      logInfo("Y MOTOR LIMIT!");
+      LogInfo("Y MOTOR LIMIT!");
     osDelay(500);
   }
 }
@@ -244,41 +241,31 @@ volatile int IntCount;
 
 void ToF_HandleTask()
 {
-  printf("VL53L1X Examples...\n");
-  VL53L1_Dev_t dev;
-  VL53L1_DEV Dev = &dev;
-  Dev->I2cHandle = &hi2c2;
-  Dev->I2cDevAddr = 0x52;
-  uint8_t byteData;
-  uint16_t wordData;
-  VL53L1_RdByte(Dev, 0x010F, &byteData);
-  printf("VL53L1X Model_ID: %02X\n\r", byteData);
-  VL53L1_RdByte(Dev, 0x0110, &byteData);
-  printf("VL53L1X Module_Type: %02X\n\r", byteData);
-  VL53L1_RdWord(Dev, 0x010F, &wordData);
-  printf("VL53L1X: %02X\n\r", wordData);
+  ToF_Handle *ptof = ToF_Init(&TOF_HI2C);
+  while(ptof == NULL) {
+    LogError("ToF device initialization error");
+    osDelay(500);
+  }
+  ToF_Info *pinfo = ToF_GetDeviceInfo(ptof);
+  while(pinfo == NULL) {
+    LogError("ToF device info read error");
+    osDelay(500);
+  }
+  PrintHEX(&pinfo->modelId, 1);
+  PrintHEX(&pinfo->moduleType, 1);
+  uint8_t temp[2];
+  Uint16ToUint8Array(pinfo->wordData, temp);
+  PrintHEX(temp, 2);
   static VL53L1_RangingMeasurementData_t RangingData;
   printf("Autonomous Ranging Test\n");
   int status = 0;
-  do {
-    status = VL53L1_WaitDeviceBooted(Dev);
-    status = VL53L1_DataInit(Dev);
-    status = VL53L1_StaticInit(Dev);
-    status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
-    status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
-    status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
-    status = VL53L1_StartMeasurement(Dev);
-    logInfo("%d", status);
-    osDelay(500);
-  }
-  while(status != 0);
-  logInfo("ToF OK");
+  LogInfo("ToF OK");
   for (;;)
   {
-    status = VL53L1_WaitMeasurementDataReady(Dev);
+    status = VL53L1_WaitMeasurementDataReady(ptof->pdevice);
     if (!status)
     {
-      status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
+      status = VL53L1_GetRangingMeasurementData(ptof->pdevice, &RangingData);
       if (status == 0)
       {
         printf("%dmm\n", RangingData.RangeMilliMeter);
@@ -288,8 +275,8 @@ void ToF_HandleTask()
         //         (RangingData.SignalRateRtnMegaCps/65536.0),RangingData.AmbientRateRtnMegaCps/65336.0);
       }
       else
-        logInfo("%d", status);
-      status = VL53L1_ClearInterruptAndStartMeasurement(Dev);
+        LogInfo("%d", status);
+      status = VL53L1_ClearInterruptAndStartMeasurement(ptof->pdevice);
     }
     osDelay(500);
   }
@@ -299,7 +286,7 @@ void Message_HandleTask()
 {
   pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (MESSAGER_Listen(pmgr) != HAL_OK)
-    logError("Messager Listen Failed");
+    LogError("Messager Listen Failed");
   while (1)
   {
     osDelay(100);

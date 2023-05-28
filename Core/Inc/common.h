@@ -3,22 +3,22 @@
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
 
-void delayUs(uint16_t us);
-uint32_t Get_System_Time(void);
-uint32_t Get_System_Time_Seconds(void);
-uint8_t* splitToDoubleUint8(uint16_t data);
-uint8_t extractUint8High(uint16_t data);
-uint8_t extractUint8Low(uint16_t data);
-uint16_t mergeToUint16(uint8_t high, uint8_t low);
+void DelayUs(uint16_t us);
+uint32_t GetSystemTime(void);
+uint32_t GetSystemSecondsTime(void);
+uint8_t ExtractUint8High(uint16_t data);
+uint8_t ExtractUint8Low(uint16_t data);
+uint16_t MergeToUint16(uint8_t high, uint8_t low);
+void Uint16ToUint8Array(uint16_t data, uint8_t* pdata);
 
 #define FALSE 0
 #define TRUE (!FALSE)
 typedef unsigned char BOOL;
 
 void PrintTaskList(void);
-HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, uint16_t stackSize);
+HAL_StatusTypeDef CreateTask(char *name, void (*task)(), osPriority priority, uint16_t stackSize);
 
-#define SYS_TIME Get_System_Time()
-#define SYS_TIME_SEC Get_System_Time_Seconds()
+#define SYS_TIME GetSystemTime()
+#define SYS_TIME_SEC GetSystemSecondsTime()
 
 #endif

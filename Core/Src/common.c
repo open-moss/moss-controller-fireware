@@ -1,5 +1,5 @@
 #include "stdio.h"
-#include "stdarg.h"
+#include "string.h"
 
 #include "usart.h"
 #include "common.h"
@@ -9,14 +9,14 @@
 /**
  * 打印系统任务列表
  */
-void printTaskList()
+void PrintTaskList()
 {
     uint8_t pcWriteBuffer[128];
     vTaskList((char *)&pcWriteBuffer);
     printf("\n%s", pcWriteBuffer);
 }
 
-HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, uint16_t stackSize)
+HAL_StatusTypeDef CreateTask(char *name, void (*task)(), osPriority priority, uint16_t stackSize)
 {
     osThreadDef_t threadDef = {0};
     threadDef.name = name;
@@ -35,12 +35,12 @@ HAL_StatusTypeDef createTask(char *name, void (*task)(), osPriority priority, ui
  * 
  * @param [in] us 微秒
  */
-void delayUs(uint16_t us)
+void DelayUs(uint16_t us)
 {
     uint16_t differ = 0xffff - us - 5;
     if (HAL_TIM_Base_Start_IT(&DELAY_US_TIMER) != HAL_OK)
     {
-        logError("delayUs Failed");
+        LogError("DelayUs Failed");
         return;
     }
     __HAL_TIM_SetCounter(&DELAY_US_TIMER, differ);
@@ -50,27 +50,34 @@ void delayUs(uint16_t us)
     }
     if (HAL_TIM_Base_Stop_IT(&DELAY_US_TIMER) != HAL_OK)
     {
-        logError("delayUs Failed");
+        LogError("DelayUs Failed");
         return;
     }
 }
 
-uint8_t extractUint8High(uint16_t data) {
+uint8_t ExtractUint8High(uint16_t data) {
     return (data >> 8) & 0xFF;
 }
 
-uint8_t extractUint8Low(uint16_t data) {
+uint8_t ExtractUint8Low(uint16_t data) {
     return data & 0xFF;
 }
 
-uint16_t mergeToUint16(uint8_t high, uint8_t low) {
+uint16_t MergeToUint16(uint8_t high, uint8_t low) {
     return (high << 8) | low;
+}
+
+void Uint16ToUint8Array(uint16_t data, uint8_t* pdata) {
+    static uint8_t temp[2];
+    temp[0] = ExtractUint8High(data);
+    temp[1] = ExtractUint8Low(data);
+    memcpy(pdata, temp, 2);
 }
 
 /**
  * 获取当前系统节拍数（开机到现在的毫秒数）
  */
-uint32_t getSystemTime(void)
+uint32_t GetSystemTime(void)
 {
     return xTaskGetTickCount();
 }
@@ -78,7 +85,7 @@ uint32_t getSystemTime(void)
 /**
  * 获取当前系统节拍数（开机到现在的秒数）
  */
-uint32_t getSystemSecondsTime(void)
+uint32_t GetSystemSecondsTime(void)
 {
     return xTaskGetTickCount() / 1000;
 }

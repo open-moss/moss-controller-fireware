@@ -1,5 +1,6 @@
 #include "stdio.h"
 #include "stdarg.h"
+#include "string.h"
 
 #include "stm32f1xx_hal.h"
 #include "cmsis_os.h"
@@ -15,11 +16,11 @@ int fputc(int c, FILE *f)
     return c;
 }
 
-void __printf(const char *name, uint32_t line, uint8_t level, const char *format, ...)
+void Printf(const char *name, uint32_t line, uint8_t level, const char *format, ...)
 {
     xSemaphoreTake(printSemaphoreHandle, 100);
     va_list ap;
-    va_start(ap, line);
+    va_start(ap, format);
     if (name != NULL && line != NULL)
         printf("[%c][%s:%d]: ", level, name, line);
     vprintf(format, ap);
@@ -29,11 +30,11 @@ void __printf(const char *name, uint32_t line, uint8_t level, const char *format
 }
 
 
-void printfISR(const char *name, uint32_t line, uint8_t level, const char *format, ...)
+void PrintfISR(const char *name, uint32_t line, uint8_t level, const char *format, ...)
 {
     xSemaphoreTakeFromISR(printSemaphoreHandle, pdFALSE);
     va_list ap;
-    va_start(ap, line);
+    va_start(ap, format);
     if (name != NULL && line != NULL)
         printf("[%c][%s:%d]: ", level, name, line);
     vprintf(format, ap);
@@ -42,7 +43,7 @@ void printfISR(const char *name, uint32_t line, uint8_t level, const char *forma
     xSemaphoreGiveFromISR(printSemaphoreHandle, pdFALSE);
 }
 
-void printHEX(const char *name, uint32_t line, uint8_t *buff, uint32_t size)
+void PrintHEX(const char *name, uint32_t line, uint8_t *buff, uint32_t size)
 {
     xSemaphoreTake(printSemaphoreHandle, 100);
     if (name != NULL && line != NULL)
