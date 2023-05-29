@@ -30,64 +30,64 @@ uint16_t Protocol_GenerateDataPacketID(void) {
 }
 
 DataPacket* Protocol_BuildDataPacket(DataPacketType type, uint8_t* body, uint16_t bodySize) {
-    DataPacket* pData = pvPortMalloc(sizeof(DataPacket));
-    memset(pData, 0, sizeof(DataPacket));
-    pData->type = type;
-    pData->size = bodySize + DATA_PACKET_MIN_SIZE;
-    pData->id = Protocol_GenerateDataPacketID();
-    pData->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
-    memset(pData->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
-    memcpy(pData->body, body, bodySize);
-    pData->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
-    memset(pData->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
-    Protocol_DataPacketSign(pData);
-    return pData;
+    DataPacket* pdata = pvPortMalloc(sizeof(DataPacket));
+    memset(pdata, 0, sizeof(DataPacket));
+    pdata->type = type;
+    pdata->size = bodySize + DATA_PACKET_MIN_SIZE;
+    pdata->id = Protocol_GenerateDataPacketID();
+    pdata->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
+    memset(pdata->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
+    memcpy(pdata->body, body, bodySize);
+    pdata->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
+    memset(pdata->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
+    Protocol_DataPacketSign(pdata);
+    return pdata;
 }
 
-void Protocol_DataPacketSign(DataPacket* const pData) {
-    uint8_t* buffer = Protocol_DataPacketToBuffer(pData);
-    uint32_t crc32 = CRC32(buffer, pData->size + sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);  //CRC32值
+void Protocol_DataPacketSign(DataPacket* const pdata) {
+    uint8_t* buffer = Protocol_DataPacketToBuffer(pdata);
+    uint32_t crc32 = CRC32(buffer, pdata->size + sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);  //CRC32值
     vPortFree(buffer);
     buffer = NULL;
-    pData->sign[0] = (crc32 >> (3 * 8)) & 0xFF;
-    pData->sign[1] = (crc32 >> (2 * 8)) & 0xFF;
-    pData->sign[2] = (crc32 >> (1 * 8)) & 0xFF;
-    pData->sign[3] = crc32 & 0xFF;
+    pdata->sign[0] = (crc32 >> (3 * 8)) & 0xFF;
+    pdata->sign[1] = (crc32 >> (2 * 8)) & 0xFF;
+    pdata->sign[2] = (crc32 >> (1 * 8)) & 0xFF;
+    pdata->sign[3] = crc32 & 0xFF;
 }
 
-uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pData) {
+uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
     uint8_t* buffer = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_MAX_SIZE);
-    buffer[0] = pData->type;  //数据包类型
-    buffer[1] = ExtractUint8High(pData->size);  //数据包大小高8位
-    buffer[2] = ExtractUint8Low(pData->size);  //数据包大小低8位
-    buffer[3] = ExtractUint8High(pData->id);  //数据包ID高8位
-    buffer[4] = ExtractUint8Low(pData->id);  //数据包ID低8位
-    uint16_t bodySize = pData->size - DATA_PACKET_MIN_SIZE;  //数据包主体大小
-    memcpy(buffer + DATA_PACKET_HEAD_SIZE, pData->body, bodySize);  //数据包主体数据
-    buffer[pData->size - 1] = DATA_PACKET_EOF;  //数据包结尾
+    buffer[0] = pdata->type;  //数据包类型
+    buffer[1] = ExtractUint8High(pdata->size);  //数据包大小高8位
+    buffer[2] = ExtractUint8Low(pdata->size);  //数据包大小低8位
+    buffer[3] = ExtractUint8High(pdata->id);  //数据包ID高8位
+    buffer[4] = ExtractUint8Low(pdata->id);  //数据包ID低8位
+    uint16_t bodySize = pdata->size - DATA_PACKET_MIN_SIZE;  //数据包主体大小
+    memcpy(buffer + DATA_PACKET_HEAD_SIZE, pdata->body, bodySize);  //数据包主体数据
+    buffer[pdata->size - 1] = DATA_PACKET_EOF;  //数据包结尾
     return buffer;
 }
 
 DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
-    DataPacket* pData = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
-    memset(pData, 0, sizeof(DataPacket));
-    pData->type = (DataPacketType)buffer[0];  //数据包类型
-    pData->size = MergeToUint16(buffer[1], buffer[2]);  //数据包大小
-    pData->id = MergeToUint16(buffer[3], buffer[4]);  //数据包ID
-    pData->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
-    memset(pData->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
-    memcpy(pData->body, buffer + DATA_PACKET_HEAD_SIZE, pData->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据
-    pData->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
-    memset(pData->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
-    memcpy(pData->sign, buffer + (pData->size - DATA_PACKET_HEAD_SIZE), DATA_PACKRT_SIGN_SIZE);  //拷贝签名数据
-    return pData;
+    DataPacket* pdata = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
+    memset(pdata, 0, sizeof(DataPacket));
+    pdata->type = (DataPacketType)buffer[0];  //数据包类型
+    pdata->size = MergeToUint16(buffer[1], buffer[2]);  //数据包大小
+    pdata->id = MergeToUint16(buffer[3], buffer[4]);  //数据包ID
+    pdata->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
+    memset(pdata->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
+    memcpy(pdata->body, buffer + DATA_PACKET_HEAD_SIZE, pdata->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据
+    pdata->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
+    memset(pdata->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
+    memcpy(pdata->sign, buffer + (pdata->size - DATA_PACKET_HEAD_SIZE), DATA_PACKRT_SIGN_SIZE);  //拷贝签名数据
+    return pdata;
 }
 
-void Protocol_FreeDataPacket(DataPacket* pData) {
-    vPortFree(pData->body);
-    pData->body = NULL;
-    vPortFree(pData->sign);
-    pData->sign = NULL;
-    vPortFree(pData);
-    pData = NULL;
+void Protocol_FreeDataPacket(DataPacket* pdata) {
+    vPortFree(pdata->body);
+    pdata->body = NULL;
+    vPortFree(pdata->sign);
+    pdata->sign = NULL;
+    vPortFree(pdata);
+    pdata = NULL;
 }

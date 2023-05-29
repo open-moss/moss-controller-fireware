@@ -33,6 +33,7 @@
 #include "messager.h"
 #include "protocol.h"
 #include "tof.h"
+#include "device.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -179,6 +180,11 @@ void StartMainTask(void const * argument)
 
   LogInfo("OLED Handle Task Created");
 
+  Device_DatalightOpen();
+
+  DataPacket *pdata = Protocol_BuildDataPacket(Heartbeat, "123456", sizeof("123456"));
+  PrintHEX(Protocol_DataPacketToBuffer(pdata), pdata->size);
+
   for (;;)
   {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
@@ -263,7 +269,8 @@ void Message_HandleTask()
   if (MESSAGER_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
   while (1) {
-    osDelay(100);
+    MESSAGER_MessageHandle();
+    // osDelay(100);
   }
 }
 

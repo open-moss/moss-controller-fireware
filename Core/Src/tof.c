@@ -40,7 +40,7 @@ ToF_Info* ToF_GetDeviceInfo(ToF_Handle* const ptof) {
 
 int16_t ToF_GetRangeMilliMeter(ToF_Handle* const ptof) {
     VL53L1_RangingMeasurementData_t *prangingData = ToF_GetRangingMeasurementData(ptof);
-    if(prangingData != NULL)
+    if(prangingData == NULL)
         return NULL;
     return prangingData->RangeMilliMeter;
 }

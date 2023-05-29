@@ -7,6 +7,7 @@
 #include "common.h"
 #include "config.h"
 #include "protocol.h"
+#include "logger.h"
 #include "messager.h"
 #include "logger.h"
 
@@ -60,6 +61,16 @@ HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle *const pmgr)
     return HAL_OK;
 }
 
+void MESSAGER_MessageHandle() {
+    osEvent event = osMessageGet(serialDataQueueHandle, 1000); //消息队列接收消息
+    if (event.status != osEventMessage)
+        return;
+    LogInfo("DATA!!!");
+    DataPacket *pdata = event.value.p;
+    PrintHEX(pdata->body, pdata->size - DATA_PACKET_MIN_SIZE);
+    Protocol_FreeDataPacket(pdata);
+}
+
 void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
 {
     memset(pmgr->rxBuffer->data, 0, sizeof(uint8_t) * pmgr->rxBuffer->size);
@@ -89,9 +100,9 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         else if (rxBuffer->index + 1 >= DATA_PACKET_MIN_SIZE)
         {
             rxBuffer->data[rxBuffer->index++] = c;
-            DataPacket *pData = Protocol_BufferToDataPacket(rxBuffer->data);
+            DataPacket *pdata = Protocol_BufferToDataPacket(rxBuffer->data);
             MESSAGER_RxBufferClear(pmgr);
-            osMessagePut(serialDataQueueHandle, (uint32_t)pData, 100); // 推送数据包到消息队列
+            osMessagePut(serialDataQueueHandle, (uint32_t)pdata, 100); // 推送数据包到消息队列
         }
     }
     else
@@ -102,11 +113,11 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         // 判断接收是否超时
         if (SYS_TIME - startTime > pmgr->rxTimeout)
         {
+            LogInfoISR("Timeout");
             HAL_UART_AbortReceive_IT(pmgr->huart);  //超时终止接收
             MESSAGER_RxBufferClear(pmgr);
             return;
         }
         osDelay(50);
     }
-    PrintHEX(rxBuffer->temp, 1);
 }

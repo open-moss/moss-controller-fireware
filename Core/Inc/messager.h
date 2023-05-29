@@ -26,6 +26,7 @@ typedef struct {
 
 MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize, uint16_t rxTimeout);
 HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle* const hmessager);
+void MESSAGER_MessageHandle(void);
 void MESSAGER_TxCpltCallback(MESSAGER_Handle* const hmessager);
 void MESSAGER_RxCpltCallback(MESSAGER_Handle* const hmessager);
 
