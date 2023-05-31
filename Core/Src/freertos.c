@@ -282,6 +282,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
+  // LogInfoISR("callback");
   if (huart->Instance == pmgr->huart->Instance)
     MESSAGER_RxCpltCallback(pmgr);
 }

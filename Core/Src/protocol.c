@@ -21,9 +21,10 @@
  * [N] -> 0x0D 回车结束符
  */
 
-uint16_t dataPacketId = 1;  //当前数据包ID
+extern SemaphoreHandle_t testSemaphoreHandle;
 
 uint16_t Protocol_GenerateDataPacketID(void) {
+    static uint16_t dataPacketId = 1;
     if(dataPacketId > 65535)
         dataPacketId = 1;
     return dataPacketId++;
@@ -69,7 +70,7 @@ uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
 }
 
 DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
-    DataPacket* pdata = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
+    DataPacket *pdata = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
     memset(pdata, 0, sizeof(DataPacket));
     pdata->type = (DataPacketType)buffer[0];  //数据包类型
     pdata->size = MergeToUint16(buffer[1], buffer[2]);  //数据包大小

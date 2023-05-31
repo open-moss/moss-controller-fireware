@@ -11,7 +11,7 @@
 #define DATA_PACKET_EOF 0x0D  //数据包结束符
 
 typedef enum {
-    Heartbeat  //心跳
+    Heartbeat = 1  //心跳
 } DataPacketType;
 
 typedef struct {

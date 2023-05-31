@@ -18,6 +18,7 @@ typedef struct {
 typedef struct {
     UART_HandleTypeDef* huart;
     SerialRxBuffer* rxBuffer;
+    uint8_t **tempBuffers;
     SemaphoreHandle_t serialSendSemaphoreHandle;
     uint16_t rxTimeout;
     BOOL serialSending;

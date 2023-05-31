@@ -31,6 +31,11 @@ MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize,
     pmgr->serialSendSemaphoreHandle = xSemaphoreCreateMutex();
     pmgr->serialSending = FALSE;
     pmgr->serialReceiving = FALSE;
+    pmgr->tempBuffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 5);
+    for(uint8_t i = 0;i < 5;i++) {
+        pmgr->tempBuffers[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * rxBufferSize);
+        memset(pmgr->tempBuffers[i], 0, sizeof(uint8_t) * rxBufferSize);
+    }
     return pmgr;
 }
 
@@ -66,9 +71,9 @@ void MESSAGER_MessageHandle() {
     if (event.status != osEventMessage)
         return;
     LogInfo("DATA!!!");
-    DataPacket *pdata = event.value.p;
+    DataPacket *pdata = Protocol_BufferToDataPacket(event.value.p);
     PrintHEX(pdata->body, pdata->size - DATA_PACKET_MIN_SIZE);
-    Protocol_FreeDataPacket(pdata);
+    // Protocol_FreeDataPacket(pdata);
 }
 
 void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
@@ -93,16 +98,17 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
     {
         if (rxBuffer->index + 1 > rxBuffer->size)
             MESSAGER_RxBufferClear(pmgr);
-        if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 3)
+        if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 3) {
             rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[1], rxBuffer->data[2]); // 从包头获取数据大小
+        }
         if (rxBuffer->index + 1 < rxBuffer->receiveSize)
             rxBuffer->data[rxBuffer->index++] = c; // 追加字符
         else if (rxBuffer->index + 1 >= DATA_PACKET_MIN_SIZE)
         {
             rxBuffer->data[rxBuffer->index++] = c;
-            DataPacket *pdata = Protocol_BufferToDataPacket(rxBuffer->data);
+            memcpy(pmgr->tempBuffers[0], rxBuffer->data, rxBuffer->size);
             MESSAGER_RxBufferClear(pmgr);
-            osMessagePut(serialDataQueueHandle, (uint32_t)pdata, 100); // 推送数据包到消息队列
+            osMessagePut(serialDataQueueHandle, (uint32_t)pmgr->tempBuffers[0], 100); // 推送数据包到消息队列
         }
     }
     else
@@ -113,7 +119,6 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         // 判断接收是否超时
         if (SYS_TIME - startTime > pmgr->rxTimeout)
         {
-            LogInfoISR("Timeout");
             HAL_UART_AbortReceive_IT(pmgr->huart);  //超时终止接收
             MESSAGER_RxBufferClear(pmgr);
             return;
