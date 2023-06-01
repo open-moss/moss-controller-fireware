@@ -48,9 +48,18 @@ void OLED_Clear(OLED_Handle *const poled)
     u8g2_SendBuffer(poled->u8g2);
 }
 
+void OLED_PartClear(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t width, uint8_t height) {
+    u8g2_SetDrawColor(poled->u8g2, 0);
+    u8g2_DrawBox(poled->u8g2, x, y, width, height);
+}
+
 void OLED_DrawString(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t *const str)
 {
+    u8g2_SetDrawColor(poled->u8g2, 1);
     u8g2_DrawStr(poled->u8g2, x, y, (const char *)str);
+}
+
+void OLED_Refresh(OLED_Handle *const poled) {
     u8g2_SendBuffer(poled->u8g2);
 }
 

@@ -11,12 +11,13 @@
 /**
  * 上位机串口通信协议
  * 
- * [0] -> 数据包类型
- * [1] -> 数据包总长度 高8位
- * [2] -> 数据包总长度 低8位
- * [3] -> 数据包ID 高8位
- * [4] -> 数据包ID 低8位
- * [5-(N-8)] -> 数据主体载荷
+ * [0-1] -> 数据帧头 EB90
+ * [2] -> 数据包类型
+ * [3] -> 数据包总长度 高8位
+ * [4] -> 数据包总长度 低8位
+ * [5] -> 数据包ID 高8位
+ * [6] -> 数据包ID 低8位
+ * [7-(N-8)] -> 数据主体载荷
  * [(N-8)-(N-1)] -> 数据包4位签名
  * [N] -> 0x0D 回车结束符
  */
@@ -58,11 +59,13 @@ void Protocol_DataPacketSign(DataPacket* const pdata) {
 
 uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
     uint8_t* buffer = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_MAX_SIZE);
-    buffer[0] = pdata->type;  //数据包类型
-    buffer[1] = ExtractUint8High(pdata->size);  //数据包大小高8位
-    buffer[2] = ExtractUint8Low(pdata->size);  //数据包大小低8位
-    buffer[3] = ExtractUint8High(pdata->id);  //数据包ID高8位
-    buffer[4] = ExtractUint8Low(pdata->id);  //数据包ID低8位
+    buffer[0] = ExtractUint8High(DATA_PACKET_HEAD);
+    buffer[1] = ExtractUint8Low(DATA_PACKET_HEAD);
+    buffer[2] = pdata->type;  //数据包类型
+    buffer[3] = ExtractUint8High(pdata->size);  //数据包大小高8位
+    buffer[4] = ExtractUint8Low(pdata->size);  //数据包大小低8位
+    buffer[5] = ExtractUint8High(pdata->id);  //数据包ID高8位
+    buffer[6] = ExtractUint8Low(pdata->id);  //数据包ID低8位
     uint16_t bodySize = pdata->size - DATA_PACKET_MIN_SIZE;  //数据包主体大小
     memcpy(buffer + DATA_PACKET_HEAD_SIZE, pdata->body, bodySize);  //数据包主体数据
     buffer[pdata->size - 1] = DATA_PACKET_EOF;  //数据包结尾
@@ -72,9 +75,9 @@ uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
 DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
     DataPacket *pdata = pvPortMalloc(sizeof(DataPacket));  //分配数据包内存
     memset(pdata, 0, sizeof(DataPacket));
-    pdata->type = (DataPacketType)buffer[0];  //数据包类型
-    pdata->size = MergeToUint16(buffer[1], buffer[2]);  //数据包大小
-    pdata->id = MergeToUint16(buffer[3], buffer[4]);  //数据包ID
+    pdata->type = (DataPacketType)buffer[2];  //数据包类型
+    pdata->size = MergeToUint16(buffer[3], buffer[4]);  //数据包大小
+    pdata->id = MergeToUint16(buffer[5], buffer[6]);  //数据包ID
     pdata->body = pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
     memset(pdata->body, 0, sizeof(uint8_t) * DATA_PACKET_BODY_MAX_SIZE);
     memcpy(pdata->body, buffer + DATA_PACKET_HEAD_SIZE, pdata->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据

@@ -3,9 +3,10 @@
 
 #include "stm32f1xx_hal.h"
 
+#define DATA_PACKET_HEAD 0xEB90  //数据帧头
 #define DATA_PACKET_MAX_SIZE 128  //数据包最大大小
-#define DATA_PACKET_MIN_SIZE 10  //数据包最小大小
-#define DATA_PACKET_HEAD_SIZE 5  //数据包头大小
+#define DATA_PACKET_MIN_SIZE 12  //数据包最小大小
+#define DATA_PACKET_HEAD_SIZE 7  //数据头大小
 #define DATA_PACKET_BODY_MAX_SIZE DATA_PACKET_MAX_SIZE - 9  //数据包主体大小
 #define DATA_PACKRT_SIGN_SIZE 4  //数据包签名大小
 #define DATA_PACKET_EOF 0x0D  //数据包结束符

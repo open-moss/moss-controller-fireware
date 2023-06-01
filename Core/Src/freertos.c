@@ -183,7 +183,8 @@ void StartMainTask(void const * argument)
   Device_DatalightOpen();
 
   DataPacket *pdata = Protocol_BuildDataPacket(Heartbeat, "123456", sizeof("123456"));
-  PrintHEX(Protocol_DataPacketToBuffer(pdata), pdata->size);
+  DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
+  PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
 
   for (;;)
   {
@@ -219,16 +220,18 @@ void OLED_HandleTask()
   poled = OLED_Init(&OLED_HI2C);
   OLED_DrawString(poled, 0, 10, "OpenMOSS");
   OLED_DrawString(poled, 0, 20, "BOOT (FIREWARE.bin)");
-  // OLED_Refresh(poled);
   for (;;)
   {
-    // uint8_t str1[20];
-    // uint8_t str2[20];
-    // sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
-    // sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
-    // OLED_DrawString(poled, 0, 30, str1);
-    // OLED_DrawString(poled, 0, 40, str2);
-    // OLED_Refresh(poled);
+    OLED_PartClear(poled, 0, 20, 128, 20);
+    uint8_t str1[20];
+    uint8_t str2[20];
+    memset(str1, 0, sizeof(uint8_t) * 20);
+    memset(str2, 0, sizeof(uint8_t) * 20);
+    sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
+    sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
+    OLED_DrawString(poled, 0, 30, str1);
+    OLED_DrawString(poled, 0, 40, str2);
+    OLED_Refresh(poled);
     osDelay(100);
   }
 }

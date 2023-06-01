@@ -63,8 +63,8 @@ void Error_Handler(void);
 #define LASER_LIGHT_GPIO_Port GPIOC
 #define DATA_LIGHT_Pin GPIO_PIN_3
 #define DATA_LIGHT_GPIO_Port GPIOC
-#define STATUS_LED_Pin GPIO_PIN_5
-#define STATUS_LED_GPIO_Port GPIOC
+#define STATUS_RED_Pin GPIO_PIN_5
+#define STATUS_RED_GPIO_Port GPIOC
 #define STATUS_BLUE_Pin GPIO_PIN_0
 #define STATUS_BLUE_GPIO_Port GPIOB
 #define _850NM_LIGHT_Pin GPIO_PIN_1

@@ -23,6 +23,9 @@ typedef struct {
 OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c);
 void OLED_Open(OLED_Handle *const poled);
 void OLED_Close(OLED_Handle *const poled);
+void OLED_Clear(OLED_Handle *const poled);
+void OLED_Refresh(OLED_Handle *const poled);
+void OLED_PartClear(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t width, uint8_t height);
 void OLED_DrawString(OLED_Handle *const holed, uint8_t x, uint8_t y, uint8_t *const str);
 
 #endif

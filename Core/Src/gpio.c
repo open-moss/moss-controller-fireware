@@ -50,7 +50,7 @@ void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LASER_LIGHT_Pin|DATA_LIGHT_Pin|STATUS_LED_Pin|OUT_5V_Pin
+  HAL_GPIO_WritePin(GPIOC, LASER_LIGHT_Pin|DATA_LIGHT_Pin|STATUS_RED_Pin|OUT_5V_Pin
                           |OUT_3V3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -61,7 +61,7 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PCPin PCPin PCPin PCPin
                            PCPin */
-  GPIO_InitStruct.Pin = LASER_LIGHT_Pin|DATA_LIGHT_Pin|STATUS_LED_Pin|OUT_5V_Pin
+  GPIO_InitStruct.Pin = LASER_LIGHT_Pin|DATA_LIGHT_Pin|STATUS_RED_Pin|OUT_5V_Pin
                           |OUT_3V3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
