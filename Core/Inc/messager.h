@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "config.h"
+#include "protocol.h"
 
 typedef struct {
     uint8_t* data;  //接收字符数组
@@ -19,17 +20,21 @@ typedef struct {
     UART_HandleTypeDef* huart;
     SerialRxBuffer* rxBuffer;
     uint8_t **tempBuffers;
-    SemaphoreHandle_t serialSendSemaphoreHandle;
+    osMessageQId *messageQueue;
+    SemaphoreHandle_t sendSemaphore;
+    SemaphoreHandle_t replySemaphore;
+    uint16_t waitReplyId;
+    uint16_t txTimeout;
     uint16_t rxTimeout;
     BOOL rxHeadStart;
-    BOOL serialSending;
-    BOOL serialReceiving;
 } MESSAGER_Handle;
 
-MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize, uint16_t rxTimeout);
-HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle* const hmessager);
-void MESSAGER_MessageHandle(void);
-void MESSAGER_TxCpltCallback(MESSAGER_Handle* const hmessager);
-void MESSAGER_RxCpltCallback(MESSAGER_Handle* const hmessager);
+MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint16_t txTimeout, uint16_t rxTimeout);
+HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle* const pmgr);
+HAL_StatusTypeDef MESSAGER_SendMessage(MESSAGER_Handle *const pmgr, DataPacket *const pdata);
+HAL_StatusTypeDef MESSAGER_SendMessageWaitReply(MESSAGER_Handle *const pmgr, DataPacket *const pdata, uint16_t replyTimeout);
+void MESSAGER_MessageHandle(MESSAGER_Handle* const pmgr);
+void MESSAGER_TxCpltCallback(MESSAGER_Handle* const pmgr);
+void MESSAGER_RxCpltCallback(MESSAGER_Handle* const pmgr);
 
 #endif

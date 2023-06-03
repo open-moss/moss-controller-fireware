@@ -11,9 +11,9 @@
 #include "messager.h"
 #include "logger.h"
 
-extern osMessageQId serialDataQueueHandle;
+void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr);
 
-MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize, uint16_t rxTimeout)
+MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint16_t txTimeout, uint16_t rxTimeout)
 {
     SerialRxBuffer *rxBuffer = pvPortMalloc(sizeof(SerialRxBuffer));
     memset(rxBuffer, 0, sizeof(SerialRxBuffer));
@@ -26,11 +26,13 @@ MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize,
     MESSAGER_Handle *pmgr = pvPortMalloc(sizeof(MESSAGER_Handle));
     memset(pmgr, 0, sizeof(MESSAGER_Handle));
     pmgr->huart = huart;
+    pmgr->messageQueue = messageQueue;
     pmgr->rxBuffer = rxBuffer;
+    pmgr->waitReplyId = 0;
+    pmgr->txTimeout = txTimeout;
     pmgr->rxTimeout = rxTimeout;
-    pmgr->serialSendSemaphoreHandle = xSemaphoreCreateMutex();
-    pmgr->serialSending = FALSE;
-    pmgr->serialReceiving = FALSE;
+    pmgr->sendSemaphore = xSemaphoreCreateMutex();
+    pmgr->replySemaphore = xSemaphoreCreateBinary();
     pmgr->rxHeadStart = FALSE;
     pmgr->tempBuffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 5);
     for(uint8_t i = 0;i < 5;i++) {
@@ -46,8 +48,6 @@ HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle *const pmgr)
     if (pmgr->huart->RxState != HAL_UART_STATE_READY)
         HAL_UART_AbortReceive_IT(pmgr->huart);
 
-    pmgr->serialSending = FALSE;
-    pmgr->serialReceiving = FALSE;
     pmgr->rxHeadStart = FALSE;
 
     uint32_t startTime = SYS_TIME; // 开始时间
@@ -58,8 +58,8 @@ HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle *const pmgr)
         // 判断接收是否超时
         if (SYS_TIME - startTime > pmgr->rxTimeout)
         {
-            HAL_UART_AbortReceive_IT(pmgr->huart);             // 超时终止接收
-            memset(pmgr->rxBuffer, 0, sizeof(SerialRxBuffer)); // 清空网络接收缓冲
+            HAL_UART_AbortReceive_IT(pmgr->huart);
+            MESSAGER_RxBufferClear(pmgr);
             return HAL_TIMEOUT;
         }
         osDelay(50);
@@ -68,13 +68,62 @@ HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle *const pmgr)
     return HAL_OK;
 }
 
-void MESSAGER_MessageHandle() {
-    osEvent event = osMessageGet(serialDataQueueHandle, 1000); //消息队列接收消息
+void MESSAGER_MessageHandle(MESSAGER_Handle *const pmgr) {
+    osEvent event = osMessageGet(pmgr->messageQueue, 1000); //消息队列接收消息
     if (event.status != osEventMessage)
         return;
     DataPacket *pdata = Protocol_BufferToDataPacket(event.value.p);
+    if(pmgr->waitReplyId == pdata->id) {
+        pmgr->waitReplyId = 0;
+        xSemaphoreGive(pmgr->replySemaphore);
+    }
     Protocol_PrintDataPacket(pdata);
     Protocol_FreeDataPacket(pdata);
+}
+
+HAL_StatusTypeDef MESSAGER_SendMessage(MESSAGER_Handle *const pmgr, DataPacket *const pdata) {
+    xSemaphoreTake(pmgr->sendSemaphore, 50);
+    uint32_t startTime = SYS_TIME;
+    uint8_t *buffer = Protocol_DataPacketToBuffer(pdata);
+    while (HAL_UART_Transmit_IT(pmgr->huart, buffer, pdata->size) != HAL_OK)
+    {
+        //判断发送开启超时
+        if (SYS_TIME - startTime > pmgr->txTimeout)
+        {
+            HAL_UART_AbortTransmit_IT(pmgr->huart);  //超时终止发送
+            xSemaphoreGive(pmgr->sendSemaphore);
+            return HAL_TIMEOUT;
+        }
+        osDelay(50);
+    }
+    Protocol_FreeBuffer(buffer);
+    xSemaphoreGive(pmgr->sendSemaphore);
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef MESSAGER_SendMessageWaitReply(MESSAGER_Handle *const pmgr, DataPacket *const pdata, uint16_t replyTimeout) {
+    xSemaphoreTake(pmgr->sendSemaphore, 50);
+    uint32_t startTime = SYS_TIME;
+    uint8_t *buffer = Protocol_DataPacketToBuffer(pdata);
+    pmgr->waitReplyId = pdata->id;
+    while (HAL_UART_Transmit_IT(pmgr->huart, buffer, pdata->size) != HAL_OK)
+    {
+        //判断发送开启超时
+        if (SYS_TIME - startTime > pmgr->txTimeout)
+        {
+            HAL_UART_AbortTransmit_IT(pmgr->huart);  //超时终止发送
+            xSemaphoreGive(pmgr->sendSemaphore);
+            return HAL_TIMEOUT;
+        }
+        osDelay(50);
+    }
+    Protocol_FreeBuffer(buffer);
+    if (xSemaphoreTake(pmgr->replySemaphore, replyTimeout) != pdTRUE) {
+        xSemaphoreGive(pmgr->sendSemaphore);
+        return HAL_TIMEOUT;
+    }
+    xSemaphoreGive(pmgr->sendSemaphore);
+    return HAL_OK;
 }
 
 void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
@@ -87,7 +136,7 @@ void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
 
 void MESSAGER_TxCpltCallback(MESSAGER_Handle *const pmgr)
 {
-    pmgr->serialSending = FALSE;
+    
 }
 
 void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
@@ -105,8 +154,6 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
     }
     if (pmgr->rxHeadStart && c == 0x0D && rxBuffer->data[0] != 0x00)
     {
-        if (rxBuffer->index + 1 > rxBuffer->size)
-            MESSAGER_RxBufferClear(pmgr);
         if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 5) {
             rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[3], rxBuffer->data[4]); // 从包头获取数据大小
         }
@@ -118,11 +165,13 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
             memcpy(pmgr->tempBuffers[0], rxBuffer->data, rxBuffer->size);
             pmgr->rxHeadStart = FALSE;
             MESSAGER_RxBufferClear(pmgr);
-            osMessagePut(serialDataQueueHandle, (uint32_t)pmgr->tempBuffers[0], 100); // 推送数据包到消息队列
+            osMessagePut(pmgr->messageQueue, (uint32_t)pmgr->tempBuffers[0], 100); // 推送数据包到消息队列
         }
     }
     else
         rxBuffer->data[rxBuffer->index++] = c;
+    if (rxBuffer->index + 1 > rxBuffer->size)
+        MESSAGER_RxBufferClear(pmgr);
     // 开始接收下一个字符
     while (HAL_UART_Receive_IT(pmgr->huart, pmgr->rxBuffer->temp, 1) != HAL_OK)
     {

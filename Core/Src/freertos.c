@@ -183,8 +183,8 @@ void StartMainTask(void const * argument)
   Device_DatalightOpen();
 
   DataPacket *pdata = Protocol_BuildDataPacket(Heartbeat, "123456", sizeof("123456"));
-  DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
-  PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
+  // DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
+  // PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
 
   for (;;)
   {
@@ -268,11 +268,11 @@ void ToF_HandleTask()
 
 void Message_HandleTask()
 {
-  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (MESSAGER_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
   while (1) {
-    MESSAGER_MessageHandle();
+    MESSAGER_MessageHandle(pmgr);
     // osDelay(100);
   }
 }

@@ -30,6 +30,7 @@ void Protocol_PrintDataPacket(DataPacket* const pdata);
 void Protocol_DataPacketSign(DataPacket* const pdata);
 uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata);
 DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer);
+void Protocol_FreeBuffer(uint8_t* const buffer);
 void Protocol_FreeDataPacket(DataPacket* pdata);
 
 #endif

@@ -96,6 +96,10 @@ void Protocol_PrintDataPacket(DataPacket* const pdata) {
     PrintRawHex(pdata->sign, DATA_PACKRT_SIGN_SIZE);
 }
 
+void Protocol_FreeBuffer(uint8_t* const buffer) {
+    vPortFree(buffer);
+}
+
 void Protocol_FreeDataPacket(DataPacket* pdata) {
     vPortFree(pdata->body);
     pdata->body = NULL;
