@@ -31,6 +31,7 @@ MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, uint16_t rxBufferSize,
     pmgr->serialSendSemaphoreHandle = xSemaphoreCreateMutex();
     pmgr->serialSending = FALSE;
     pmgr->serialReceiving = FALSE;
+    pmgr->rxHeadStart = FALSE;
     pmgr->tempBuffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 5);
     for(uint8_t i = 0;i < 5;i++) {
         pmgr->tempBuffers[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * rxBufferSize);
@@ -47,6 +48,7 @@ HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle *const pmgr)
 
     pmgr->serialSending = FALSE;
     pmgr->serialReceiving = FALSE;
+    pmgr->rxHeadStart = FALSE;
 
     uint32_t startTime = SYS_TIME; // 开始时间
 
@@ -70,10 +72,9 @@ void MESSAGER_MessageHandle() {
     osEvent event = osMessageGet(serialDataQueueHandle, 1000); //消息队列接收消息
     if (event.status != osEventMessage)
         return;
-    LogInfo("DATA!!!");
     DataPacket *pdata = Protocol_BufferToDataPacket(event.value.p);
-    PrintHEX(pdata->body, pdata->size - DATA_PACKET_MIN_SIZE);
-    // Protocol_FreeDataPacket(pdata);
+    Protocol_PrintDataPacket(pdata);
+    Protocol_FreeDataPacket(pdata);
 }
 
 void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
@@ -94,12 +95,20 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
     uint32_t startTime = SYS_TIME; // 接收开始时间
     SerialRxBuffer *rxBuffer = pmgr->rxBuffer;
     uint8_t c = rxBuffer->temp[0]; // 接收的字符
-    if (c == 0x0D && rxBuffer->data[0] != 0x00)
+    if(pmgr->rxHeadStart && rxBuffer->index == 1 && c != DATA_PACKET_HEAD_LOW) {
+        pmgr->rxHeadStart = FALSE;
+        MESSAGER_RxBufferClear(pmgr);
+    }
+    if(!pmgr->rxHeadStart && c == DATA_PACKET_HEAD_HIGH) {
+        pmgr->rxHeadStart = TRUE;
+        MESSAGER_RxBufferClear(pmgr);
+    }
+    if (pmgr->rxHeadStart && c == 0x0D && rxBuffer->data[0] != 0x00)
     {
         if (rxBuffer->index + 1 > rxBuffer->size)
             MESSAGER_RxBufferClear(pmgr);
-        if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 3) {
-            rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[1], rxBuffer->data[2]); // 从包头获取数据大小
+        if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 5) {
+            rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[3], rxBuffer->data[4]); // 从包头获取数据大小
         }
         if (rxBuffer->index + 1 < rxBuffer->receiveSize)
             rxBuffer->data[rxBuffer->index++] = c; // 追加字符
@@ -107,6 +116,7 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         {
             rxBuffer->data[rxBuffer->index++] = c;
             memcpy(pmgr->tempBuffers[0], rxBuffer->data, rxBuffer->size);
+            pmgr->rxHeadStart = FALSE;
             MESSAGER_RxBufferClear(pmgr);
             osMessagePut(serialDataQueueHandle, (uint32_t)pmgr->tempBuffers[0], 100); // 推送数据包到消息队列
         }

@@ -43,6 +43,19 @@ void PrintfISR(const char *name, uint32_t line, uint8_t level, const char *forma
     xSemaphoreGiveFromISR(printSemaphoreHandle, pdFALSE);
 }
 
+void PrintRawHex(uint8_t *buff, uint32_t size)
+{
+    xSemaphoreTake(printSemaphoreHandle, 100);
+    for (uint32_t i = 0; i < size; i++)
+    {
+        printf("%02X", buff[i]);
+        if (i < size - 1)
+            printf(" ");
+    }
+    printf("\n");
+    xSemaphoreGive(printSemaphoreHandle);
+}
+
 void PrintHEX(const char *name, uint32_t line, uint8_t *buff, uint32_t size)
 {
     xSemaphoreTake(printSemaphoreHandle, 100);

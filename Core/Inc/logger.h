@@ -4,6 +4,7 @@
 
 void Printf(const char *name, uint32_t line, uint8_t level, const char *format, ...);
 void PrintfISR(const char *name, uint32_t line, uint8_t level, const char *format, ...);
+void PrintRawHex(uint8_t *buff, uint32_t size);
 void PrintHEX(const char *name, uint32_t line, uint8_t *buff, uint32_t size);
 
 #define LogInfo(...) Printf(__FUNCTION__, __LINE__, 73, __VA_ARGS__)

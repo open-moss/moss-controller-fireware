@@ -3,7 +3,8 @@
 
 #include "stm32f1xx_hal.h"
 
-#define DATA_PACKET_HEAD 0xEB90  //数据帧头
+#define DATA_PACKET_HEAD_HIGH 0xEB  //数据帧头高位
+#define DATA_PACKET_HEAD_LOW 0x90  //数据帧头低位
 #define DATA_PACKET_MAX_SIZE 128  //数据包最大大小
 #define DATA_PACKET_MIN_SIZE 12  //数据包最小大小
 #define DATA_PACKET_HEAD_SIZE 7  //数据头大小
@@ -12,7 +13,7 @@
 #define DATA_PACKET_EOF 0x0D  //数据包结束符
 
 typedef enum {
-    Heartbeat = 1  //心跳
+    Heartbeat = 0  //心跳
 } DataPacketType;
 
 typedef struct {
@@ -25,9 +26,10 @@ typedef struct {
 
 uint16_t Protocol_GenerateDataPacketID(void);
 DataPacket* Protocol_BuildDataPacket(DataPacketType type, uint8_t *body, uint16_t bodySize);
-void Protocol_DataPacketSign(DataPacket* const pData);
-uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pData);
+void Protocol_PrintDataPacket(DataPacket* const pdata);
+void Protocol_DataPacketSign(DataPacket* const pdata);
+uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata);
 DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer);
-void Protocol_FreeDataPacket(DataPacket* pData);
+void Protocol_FreeDataPacket(DataPacket* pdata);
 
 #endif

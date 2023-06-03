@@ -6,6 +6,7 @@
 #include "common.h"
 #include "config.h"
 #include "protocol.h"
+#include "logger.h"
 #include "crc32.h"
 
 /**
@@ -59,8 +60,8 @@ void Protocol_DataPacketSign(DataPacket* const pdata) {
 
 uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
     uint8_t* buffer = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_MAX_SIZE);
-    buffer[0] = ExtractUint8High(DATA_PACKET_HEAD);
-    buffer[1] = ExtractUint8Low(DATA_PACKET_HEAD);
+    buffer[0] = DATA_PACKET_HEAD_HIGH;
+    buffer[1] = DATA_PACKET_HEAD_LOW;
     buffer[2] = pdata->type;  //数据包类型
     buffer[3] = ExtractUint8High(pdata->size);  //数据包大小高8位
     buffer[4] = ExtractUint8Low(pdata->size);  //数据包大小低8位
@@ -83,8 +84,16 @@ DataPacket* Protocol_BufferToDataPacket(uint8_t* const buffer) {
     memcpy(pdata->body, buffer + DATA_PACKET_HEAD_SIZE, pdata->size - DATA_PACKET_MIN_SIZE);  //拷贝数据包主体数据
     pdata->sign = pvPortMalloc(sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
     memset(pdata->sign, 0, sizeof(uint8_t) * DATA_PACKRT_SIGN_SIZE);
-    memcpy(pdata->sign, buffer + (pdata->size - DATA_PACKET_HEAD_SIZE), DATA_PACKRT_SIGN_SIZE);  //拷贝签名数据
+    memcpy(pdata->sign, buffer + (pdata->size - 5), DATA_PACKRT_SIGN_SIZE);  //拷贝签名数据
     return pdata;
+}
+
+void Protocol_PrintDataPacket(DataPacket* const pdata) {
+    uint16_t bodySize = pdata->size - DATA_PACKET_MIN_SIZE;
+    printf("\nType: %d\nSize: %d\nID: %d\nBodySize: %d\nBody: ", pdata->type, pdata->size, pdata->id, bodySize);
+    PrintRawHex(pdata->body, bodySize);
+    printf("Sign: ");
+    PrintRawHex(pdata->sign, DATA_PACKRT_SIGN_SIZE);
 }
 
 void Protocol_FreeDataPacket(DataPacket* pdata) {

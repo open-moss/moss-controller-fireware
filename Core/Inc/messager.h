@@ -21,6 +21,7 @@ typedef struct {
     uint8_t **tempBuffers;
     SemaphoreHandle_t serialSendSemaphoreHandle;
     uint16_t rxTimeout;
+    BOOL rxHeadStart;
     BOOL serialSending;
     BOOL serialReceiving;
 } MESSAGER_Handle;
