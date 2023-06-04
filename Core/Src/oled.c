@@ -3,6 +3,7 @@
 #include "oled.h"
 #include "i2c.h"
 #include "u8g2.h"
+#include "logger.h"
 
 #define OLED_COMMAND_ADDRESS 0x00
 #define OLED_DATA_ADDRESS 0x40
@@ -12,20 +13,38 @@ void OLED_Close(OLED_Handle *const poled);
 void OLED_Clear(OLED_Handle *const poled);
 uint8_t OLED_SendData(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr);
 uint8_t OLED_Delay(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr);
+uint8_t* OLED_GetBufferPoint(OLED_Handle *const poled);
 
-OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c)
+OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c, osMessageQId *messageQueue, uint16_t bufferSize, uint8_t bufferCount)
 {
     OLED_Handle *poled = pvPortMalloc(sizeof(OLED_Handle));
     memset(poled, 0, sizeof(OLED_Handle));
+    OLED_SceneContext *psceneCtx = pvPortMalloc(sizeof(OLED_SceneContext));
+    memset(psceneCtx, 0, sizeof(OLED_SceneContext));
+    poled->scene = OLED_SCENE_NORMAL;
+    poled->sceneCtx = psceneCtx;
+    poled->sceneCtx->x = 0;
+    poled->sceneCtx->y = 0;
     poled->hi2c = hi2c;
+    poled->messageQueue = messageQueue;
     u8g2_t *u8g2 = pvPortMalloc(sizeof(u8g2_t));
     memset(u8g2, 0, sizeof(u8g2_t));
     u8g2_Setup_ssd1306_i2c_128x64_noname_f(u8g2, U8G2_R0, OLED_SendData, OLED_Delay); // 初始化u8g2
     poled->u8g2 = u8g2;
+    poled->bufferIndex = 0;
+    poled->bufferCount = bufferCount;
+    poled->bufferSize = bufferSize;
+    poled->buffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * bufferCount);
+    for(uint8_t i = 0;i < bufferCount;i++) {
+        poled->buffers[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * bufferSize);
+        memset(poled->buffers[i], 0, sizeof(uint8_t) * bufferSize);
+    }
     u8g2_InitDisplay(poled->u8g2);     // 根据所选的芯片进行初始化工作，初始化完成后，显示器处于关闭状态
     OLED_Open(poled);
     OLED_Clear(poled);
     u8g2_SetFont(poled->u8g2, u8g2_font_6x13_tf);
+    OLED_DrawString(poled, 0, 12, "Test");
+    PrintHEX(u8g2_GetBufferPtr(poled->u8g2), u8g2_GetBufferTileWidth(poled->u8g2) * u8g2_GetBufferTileHeight(poled->u8g2));
     return poled;
 }
 
@@ -59,8 +78,40 @@ void OLED_DrawString(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t *co
     u8g2_DrawStr(poled->u8g2, x, y, (const char *)str);
 }
 
+void OLED_PushString(OLED_Handle *const poled, uint8_t *const str) {
+    uint8_t *buffer = OLED_GetBufferPoint(poled);
+    memcpy(buffer, str, poled->bufferSize);
+    osMessagePut(poled->messageQueue, (uint32_t)buffer, 100);
+}
+
 void OLED_Refresh(OLED_Handle *const poled) {
     u8g2_SendBuffer(poled->u8g2);
+}
+
+void OLED_Free(OLED_Handle *const poled) {
+    // vPortFree(poled->sceneCtx);
+    // vPortFree(poled->sceneCtx);
+}
+
+void OLED_MessageHandle(OLED_Handle *const poled) {
+    osEvent event = osMessageGet(poled->messageQueue, 1000); //消息队列接收消息
+    if (event.status != osEventMessage)
+        return;
+    uint8_t *buffer = event.value.p;
+    OLED_PartClear(poled, poled->sceneCtx->x, poled->sceneCtx->y, 128, 12);
+    OLED_DrawString(poled, poled->sceneCtx->x, poled->sceneCtx->y + 12, buffer);
+    OLED_Refresh(poled);
+    poled->sceneCtx->y += 12;
+    if(poled->sceneCtx->y > 48)
+        poled->sceneCtx->y = 0;
+    osDelay(300);
+}
+
+uint8_t* OLED_GetBufferPoint(OLED_Handle *const poled) {
+    if(poled->bufferIndex >= poled->bufferCount)
+        poled->bufferIndex = 0;
+    memset(poled->buffers[poled->bufferIndex], 0, sizeof(uint8_t) * poled->bufferSize);
+    return poled->buffers[poled->bufferIndex++];
 }
 
 uint8_t OLED_SendData(u8x8_t *u8x8, uint8_t msg, uint8_t argInt, void *argPtr)

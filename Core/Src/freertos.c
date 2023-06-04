@@ -65,6 +65,7 @@ SemaphoreHandle_t printSemaphoreHandle = NULL;
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
 osMessageQId serialDataQueueHandle;
+osMessageQId oledDataQeueHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -121,6 +122,10 @@ void MX_FREERTOS_Init(void) {
   osMessageQDef(serialDataQueue, 10, uint32_t);
   serialDataQueueHandle = osMessageCreate(osMessageQ(serialDataQueue), NULL);
 
+  /* definition and creation of oledDataQeue */
+  osMessageQDef(oledDataQeue, 10, uint32_t);
+  oledDataQeueHandle = osMessageCreate(osMessageQ(oledDataQeue), NULL);
+
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
@@ -150,39 +155,41 @@ void StartMainTask(void const * argument)
 
   /* Infinite loop */
 
-  while (CreateTask("MOTOR_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
-  {
-    LogInfo("MOTOR Handle Task Create Failed");
-    osDelay(100);
-  }
-
-  LogInfo("MOTOR Handle Task Created");  
-
-  while (CreateTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
-  {
-    LogInfo("ToF Handle Task Create Failed");
-    osDelay(100);
-  }
-
-  LogInfo("ToF Handle Task Created");
-
+  //创建消息处理任务
   while (CreateTask("Message_HandleTask", Message_HandleTask, osPriorityHigh, 256) != HAL_OK)
   {
     LogInfo("Message Handle Task Create Failed");
     osDelay(100);
   }
+  LogInfo("Message Handle Task Created");
 
+  //创建OLED处理任务
   while (CreateTask("OLED_HandleTask", OLED_HandleTask, osPriorityBelowNormal, 256) != HAL_OK)
   {
     LogInfo("OLED Handle Task Create Failed");
     osDelay(100);
   }
-
   LogInfo("OLED Handle Task Created");
 
-  Device_DatalightOpen();
+  //创建电机处理任务
+  while (CreateTask("Motor_HandleTask", MOTOR_HandleTask, osPriorityBelowNormal, 192) != HAL_OK)
+  {
+    LogInfo("MOTOR Handle Task Create Failed");
+    osDelay(100);
+  }
+  LogInfo("Motor Handle Task Created");  
 
-  DataPacket *pdata = Protocol_BuildDataPacket(Heartbeat, "123456", sizeof("123456"));
+  //创建激光测距处理任务
+  while (CreateTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
+  {
+    LogInfo("ToF Handle Task Create Failed");
+    osDelay(100);
+  }
+  LogInfo("ToF Handle Task Created");
+
+  Device_DatalightOpen();  //初始化完毕后开启数据灯
+
+  // DataPacket *pdata = Protocol_BuildDataPacket(DATA_PACKET_HEARTBEAT, "123456", sizeof("123456"));
   // DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
   // PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
 
@@ -217,22 +224,22 @@ void MOTOR_HandleTask()
 
 void OLED_HandleTask()
 {
-  poled = OLED_Init(&OLED_HI2C);
-  OLED_DrawString(poled, 0, 10, "OpenMOSS");
-  OLED_DrawString(poled, 0, 20, "BOOT (FIREWARE.bin)");
+  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT);
   for (;;)
   {
-    OLED_PartClear(poled, 0, 20, 128, 20);
-    uint8_t str1[20];
-    uint8_t str2[20];
-    memset(str1, 0, sizeof(uint8_t) * 20);
-    memset(str2, 0, sizeof(uint8_t) * 20);
-    sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
-    sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
-    OLED_DrawString(poled, 0, 30, str1);
-    OLED_DrawString(poled, 0, 40, str2);
-    OLED_Refresh(poled);
-    osDelay(100);
+
+    // OLED_PartClear(poled, 0, 24, 128, 24);
+    // uint8_t str1[20];
+    // uint8_t str2[20];
+    // memset(str1, 0, sizeof(uint8_t) * 20);
+    // memset(str2, 0, sizeof(uint8_t) * 20);
+    // sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
+    // sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
+    // OLED_DrawString(poled, 0, 36, str1);
+    // OLED_DrawString(poled, 0, 48, str2);
+    // OLED_Refresh(poled);
+    OLED_MessageHandle(poled);
+    // osDelay(100);
   }
 }
 
@@ -242,13 +249,13 @@ volatile int IntCount;
 
 void ToF_HandleTask()
 {
-  ToF_Handle *ptof = ToF_Init(&TOF_HI2C);
-  while(ptof == NULL) {
+  ToF_Handle *ptof;
+  while((ptof = ToF_Init(&TOF_HI2C)) == NULL) {
     LogError("ToF device initialization error");
     osDelay(500);
   }
-  ToF_Info *pinfo = ToF_GetDeviceInfo(ptof);
-  while(pinfo == NULL) {
+  ToF_Info *pinfo;
+  while((pinfo = ToF_GetDeviceInfo(ptof)) == NULL) {
     LogError("ToF device info read error");
     osDelay(500);
   }
@@ -261,14 +268,17 @@ void ToF_HandleTask()
     int16_t range = ToF_GetRangeMilliMeter(ptof);
     MOTOR_Rotate(pmotorX, range);
     MOTOR_Rotate(pmotorY, range);
-    LogInfo("%dmm", range);
+    // LogInfo("%dmm", range);
+    uint8_t str[10];
+    sprintf((char*)str, "%dmm", range);
+    OLED_PushString(poled, str);
     osDelay(500);
   }
 }
 
 void Message_HandleTask()
 {
-  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (MESSAGER_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
   while (1) {

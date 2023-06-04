@@ -32,7 +32,13 @@
         "stdarg.h": "c",
         "tof.h": "c",
         "protocol.h": "c",
-        "u8g2.h": "c"
+        "u8g2.h": "c",
+        "limits": "c",
+        "memory": "c",
+        "bit": "c",
+        "compare": "c",
+        "cstddef": "c",
+        "type_traits": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.encoding": "utf8"

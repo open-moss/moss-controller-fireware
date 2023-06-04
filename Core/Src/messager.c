@@ -9,11 +9,14 @@
 #include "protocol.h"
 #include "logger.h"
 #include "messager.h"
+#include "oled.h"
 #include "logger.h"
+
+extern OLED_Handle *poled;
 
 void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr);
 
-MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint16_t txTimeout, uint16_t rxTimeout)
+MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint8_t tempBufferCount, uint16_t txTimeout, uint16_t rxTimeout)
 {
     SerialRxBuffer *rxBuffer = pvPortMalloc(sizeof(SerialRxBuffer));
     memset(rxBuffer, 0, sizeof(SerialRxBuffer));
@@ -34,8 +37,10 @@ MESSAGER_Handle *MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQ
     pmgr->sendSemaphore = xSemaphoreCreateMutex();
     pmgr->replySemaphore = xSemaphoreCreateBinary();
     pmgr->rxHeadStart = FALSE;
-    pmgr->tempBuffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * 5);
-    for(uint8_t i = 0;i < 5;i++) {
+    pmgr->tempBufferIndex = 0;
+    pmgr->tempBufferCount = tempBufferCount;
+    pmgr->tempBuffers = (uint8_t**)pvPortMalloc(sizeof(uint8_t*) * tempBufferCount);
+    for(uint8_t i = 0;i < tempBufferCount;i++) {
         pmgr->tempBuffers[i] = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * rxBufferSize);
         memset(pmgr->tempBuffers[i], 0, sizeof(uint8_t) * rxBufferSize);
     }
@@ -78,6 +83,7 @@ void MESSAGER_MessageHandle(MESSAGER_Handle *const pmgr) {
         xSemaphoreGive(pmgr->replySemaphore);
     }
     Protocol_PrintDataPacket(pdata);
+    OLED_PushString(poled, pdata->body);
     Protocol_FreeDataPacket(pdata);
 }
 
@@ -134,6 +140,13 @@ void MESSAGER_RxBufferClear(MESSAGER_Handle *const pmgr)
     pmgr->rxBuffer->index = 0;
 }
 
+uint8_t* MESSAGE_GetTempBufferPoint(MESSAGER_Handle *const pmgr) {
+    if(pmgr->tempBufferIndex >= pmgr->tempBufferCount)
+        pmgr->tempBufferIndex = 0;
+    memset(pmgr->tempBuffers[pmgr->tempBufferIndex], 0, sizeof(uint8_t) * pmgr->rxBuffer->size);
+    return pmgr->tempBuffers[pmgr->tempBufferIndex++];
+}
+
 void MESSAGER_TxCpltCallback(MESSAGER_Handle *const pmgr)
 {
     
@@ -162,10 +175,11 @@ void MESSAGER_RxCpltCallback(MESSAGER_Handle *const pmgr)
         else if (rxBuffer->index + 1 >= DATA_PACKET_MIN_SIZE)
         {
             rxBuffer->data[rxBuffer->index++] = c;
-            memcpy(pmgr->tempBuffers[0], rxBuffer->data, rxBuffer->size);
+            uint8_t *tempBuffer = MESSAGE_GetTempBufferPoint(pmgr);
+            memcpy(tempBuffer, rxBuffer->data, rxBuffer->size);
             pmgr->rxHeadStart = FALSE;
             MESSAGER_RxBufferClear(pmgr);
-            osMessagePut(pmgr->messageQueue, (uint32_t)pmgr->tempBuffers[0], 100); // 推送数据包到消息队列
+            osMessagePut(pmgr->messageQueue, (uint32_t)tempBuffer, 100); // 推送数据包到消息队列
         }
     }
     else

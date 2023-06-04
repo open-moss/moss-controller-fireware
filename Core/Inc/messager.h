@@ -19,7 +19,9 @@ typedef struct {
 typedef struct {
     UART_HandleTypeDef* huart;
     SerialRxBuffer* rxBuffer;
+    uint8_t tempBufferIndex;
     uint8_t **tempBuffers;
+    uint8_t tempBufferCount;
     osMessageQId *messageQueue;
     SemaphoreHandle_t sendSemaphore;
     SemaphoreHandle_t replySemaphore;
@@ -29,7 +31,7 @@ typedef struct {
     BOOL rxHeadStart;
 } MESSAGER_Handle;
 
-MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint16_t txTimeout, uint16_t rxTimeout);
+MESSAGER_Handle* MESSAGER_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint8_t tempBufferSize, uint16_t txTimeout, uint16_t rxTimeout);
 HAL_StatusTypeDef MESSAGER_Listen(MESSAGER_Handle* const pmgr);
 HAL_StatusTypeDef MESSAGER_SendMessage(MESSAGER_Handle *const pmgr, DataPacket *const pdata);
 HAL_StatusTypeDef MESSAGER_SendMessageWaitReply(MESSAGER_Handle *const pmgr, DataPacket *const pdata, uint16_t replyTimeout);
