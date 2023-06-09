@@ -29,10 +29,10 @@
 #include "config.h"
 #include "motor.h"
 #include "oled.h"
+#include "humiture_sensor.h"
 #include "logger.h"
 #include "messager.h"
 #include "protocol.h"
-#include "tof.h"
 #include "device.h"
 /* USER CODE END Includes */
 
@@ -71,7 +71,7 @@ osMessageQId oledDataQeueHandle;
 /* USER CODE BEGIN FunctionPrototypes */
 void MOTOR_HandleTask(void);
 void OLED_HandleTask(void);
-void ToF_HandleTask(void);
+void EnvCollection_HandleTask(void);
 void Message_HandleTask(void);
 /* USER CODE END FunctionPrototypes */
 
@@ -180,12 +180,12 @@ void StartMainTask(void const * argument)
   LogInfo("Motor Handle Task Created");  
 
   //创建激光测距处理任务
-  while (CreateTask("ToF_HandleTask", ToF_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
+  while (CreateTask("EnvCollection_HandleTask", EnvCollection_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
   {
-    LogInfo("ToF Handle Task Create Failed");
+    LogInfo("EnvCollection Handle Task Create Failed");
     osDelay(100);
   }
-  LogInfo("ToF Handle Task Created");
+  LogInfo("EnvCollection Handle Task Created");
 
   Device_DatalightOpen();  //初始化完毕后开启数据灯
 
@@ -196,7 +196,7 @@ void StartMainTask(void const * argument)
   for (;;)
   {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
-      printf("FOUNDED HUMAN!!!");
+      LogInfo("FOUNDED HUMAN!!!");
     // PrintTaskList();
     osDelay(1000);
   }
@@ -247,31 +247,10 @@ volatile int IntCount;
 #define isAutonomousExample 1 /* Allow to select either autonomous ranging or fast ranging example */
 #define isInterrupt 1         /* If isInterrupt = 1 then device working in interrupt mode, else device working in polling mode */
 
-void ToF_HandleTask()
+void EnvCollection_HandleTask()
 {
-  ToF_Handle *ptof;
-  while((ptof = ToF_Init(&TOF_HI2C)) == NULL) {
-    LogError("ToF device initialization error");
-    osDelay(500);
-  }
-  ToF_Info *pinfo;
-  while((pinfo = ToF_GetDeviceInfo(ptof)) == NULL) {
-    LogError("ToF device info read error");
-    osDelay(500);
-  }
-  PrintHEX(&pinfo->modelId, 1);
-  PrintHEX(&pinfo->moduleType, 1);
-  uint8_t temp[2];
-  Uint16ToUint8Array(pinfo->wordData, temp);
-  PrintHEX(temp, 2);
+  HumitureSensor_Handle* phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
   while(1) {
-    int16_t range = ToF_GetRangeMilliMeter(ptof);
-    MOTOR_Rotate(pmotorX, range);
-    MOTOR_Rotate(pmotorY, range);
-    // LogInfo("%dmm", range);
-    uint8_t str[10];
-    sprintf((char*)str, "%dmm", range);
-    OLED_PushString(poled, str);
     osDelay(500);
   }
 }

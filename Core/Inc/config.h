@@ -80,9 +80,9 @@
 #define EXTENDS_SERIAL_PORT_BUFFER_MAX_SIZE 128  //扩展串口缓冲区最大大小
 
 /**
- * 激光测距配置
+ * 温湿度传感配置
  */
-#define TOF_HI2C hi2c2  //I2C句柄
-#define TOF_I2C_ADDRESS 0x78  //I2C设备地址
+#define HUMITURE_SENSOR_HI2C hi2c2  //I2C句柄
+#define HUMITURE_SENSOR_I2C_ADDRESS 0x07  //I2C设备地址
 
 #endif

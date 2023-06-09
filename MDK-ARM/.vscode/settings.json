@@ -38,7 +38,11 @@
         "bit": "c",
         "compare": "c",
         "cstddef": "c",
-        "type_traits": "c"
+        "type_traits": "c",
+        "shtc3.h": "c",
+        "stm32f1xx.h": "c",
+        "cstdio": "c",
+        "humiture_sensor.h": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.encoding": "utf8"

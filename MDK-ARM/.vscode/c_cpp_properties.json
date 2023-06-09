@@ -20,7 +20,6 @@
                 "f:\\moss-controller-fireware\\Drivers\\STM32F1xx_HAL_Driver\\Src",
                 "f:\\moss-controller-fireware\\Middlewares\\Third_Party\\FreeRTOS\\Source",
                 "f:\\moss-controller-fireware\\Middlewares\\Third_Party\\FreeRTOS\\Source\\portable\\MemMang",
-                "f:\\moss-controller-fireware\\Core\\Src\\vl53l1x",
                 "f:\\moss-controller-fireware\\Core\\Src\\u8g2"
             ],
             "defines": [
