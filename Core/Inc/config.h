@@ -37,7 +37,7 @@
  */
 #define OLED_INVERSE_COLOR FALSE  //是否反色显示
 #define OLED_TEXT_BUFFER_SIZE 128  //文本缓冲区大小
-#define OLED_TEXT_BUFFER_COUNT 10  //文本缓冲区个数
+#define OLED_TEXT_BUFFER_COUNT 5  //文本缓冲区个数
 #define OLED_HI2C hi2c1  //I2C句柄
 #define OLED_I2C_ADDRESS 0x78  //I2C设备地址
 #define OLED_I2C_CLOCK_SPEED 400  //I2C时钟周期（KHZ）
@@ -70,7 +70,7 @@
  * 串口配置
  */
 #define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //上位机串口UART句柄
-#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE 128  //上位机串口缓冲区大小
+#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE 32  //上位机串口缓冲区大小
 #define UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT 5  //上位机串口临时缓冲区个数
 #define UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT 2000  //上位机串口接收数据超时时间
 #define UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT 2000  //上位机串口接收数据超时时间

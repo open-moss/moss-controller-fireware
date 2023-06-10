@@ -21,23 +21,21 @@ typedef enum {
 } OLED_SceneType;
 
 typedef struct {
-    uint8_t x;
-    uint8_t y;
-} OLED_SceneContext;
-
-typedef struct {
     OLED_SceneType scene;
-    OLED_SceneContext *sceneCtx;
     I2C_HandleTypeDef *hi2c;
     osMessageQId *messageQueue;
+    uint8_t **messageBuffer;
+    uint8_t messageBufferIndex;
+    uint8_t messageBufferCount;
     u8g2_t *u8g2;
     uint8_t bufferIndex;
     uint8_t **buffers;
     uint16_t bufferSize;
     uint8_t bufferCount;
+    BOOL buffersUpdated;
 } OLED_Handle;
 
-OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c, osMessageQId *messageQueue, uint16_t bufferSize, uint8_t bufferCount);
+OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c, osMessageQId *messageQueue, uint16_t bufferSize, uint8_t bufferCount, uint8_t messageBufferCount);
 void OLED_Open(OLED_Handle *const poled);
 void OLED_Close(OLED_Handle *const poled);
 void OLED_Clear(OLED_Handle *const poled);

@@ -26,6 +26,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 #include "config.h"
 #include "motor.h"
 #include "oled.h"
@@ -123,7 +124,7 @@ void MX_FREERTOS_Init(void) {
   serialDataQueueHandle = osMessageCreate(osMessageQ(serialDataQueue), NULL);
 
   /* definition and creation of oledDataQeue */
-  osMessageQDef(oledDataQeue, 10, uint32_t);
+  osMessageQDef(oledDataQeue, 15, uint32_t);
   oledDataQeueHandle = osMessageCreate(osMessageQ(oledDataQeue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -193,6 +194,7 @@ void StartMainTask(void const * argument)
   // DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
   // PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
 
+
   for (;;)
   {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
@@ -224,7 +226,7 @@ void MOTOR_HandleTask()
 
 void OLED_HandleTask()
 {
-  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT);
+  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT, 15);
   for (;;)
   {
 
@@ -239,7 +241,6 @@ void OLED_HandleTask()
     // OLED_DrawString(poled, 0, 48, str2);
     // OLED_Refresh(poled);
     OLED_MessageHandle(poled);
-    // osDelay(100);
   }
 }
 
@@ -250,8 +251,27 @@ volatile int IntCount;
 void EnvCollection_HandleTask()
 {
   HumitureSensor_Handle* phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
+  osDelay(500);
   while(1) {
-    osDelay(500);
+    HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
+    if(measureData == NULL) {
+      LogWarn("HumitureSensor Measuring Failed");
+      HumitureSensor_Reset(phs);
+      osDelay(500);
+      continue;
+    }
+    uint8_t str1[20];
+    uint8_t str2[20];
+    memset(str1, 0, sizeof(uint8_t) * 20);
+    memset(str2, 0, sizeof(uint8_t) * 20);
+    sprintf((char *)str1, "Temperature: %2.2f", measureData->temperature);
+    sprintf((char *)str2, "Humidity: %2.2f", measureData->humidity);
+    HumitureSensor_FreeMeasureData(measureData);
+    OLED_PushString(poled, str1);
+    osDelay(100);
+    OLED_PushString(poled, str2);
+    // OLED_Refresh(poled);
+    osDelay(1000);
   }
 }
 
