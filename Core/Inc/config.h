@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include "common.h"
+#include "u8g2.h"
 #include "i2c.h"
 #include "spi.h"
 #include "usart.h"
@@ -35,9 +36,11 @@
 /**
  * OLED屏幕配置 
  */
-#define OLED_INVERSE_COLOR FALSE  //是否反色显示
-#define OLED_TEXT_BUFFER_SIZE 20  //文本缓冲区大小
-#define OLED_TEXT_BUFFER_COUNT 5  //文本缓冲区个数
+#define OLED_TEXT_FONT u8g2_font_6x12_tf  //文本应用字体
+#define OLED_TEXT_COLUMNS 20  //文本列数
+#define OLED_TEXT_LINES 5  //文本行数
+#define OLED_TEXT_BUFFER_LENGTH 64  //文本缓冲区长度
+#define OLED_TEXT_BUFFER_COUNT 15  //文本缓冲区个数
 #define OLED_HI2C hi2c1  //I2C句柄
 #define OLED_I2C_ADDRESS 0x78  //I2C设备地址
 #define OLED_I2C_CLOCK_SPEED 400  //I2C时钟周期（KHZ）

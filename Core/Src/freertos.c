@@ -228,7 +228,7 @@ void MOTOR_HandleTask()
 
 void OLED_HandleTask()
 {
-  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT, 32, 15);
+  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_FONT, OLED_TEXT_COLUMNS, OLED_TEXT_LINES, OLED_TEXT_BUFFER_LENGTH, OLED_TEXT_BUFFER_COUNT);
   for (;;)
   {
 

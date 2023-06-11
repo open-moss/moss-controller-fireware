@@ -24,18 +24,18 @@ typedef struct {
     OLED_SceneType scene;
     I2C_HandleTypeDef *hi2c;
     osMessageQId *messageQueue;
-    uint8_t **messageBuffer;
-    uint8_t messageBufferIndex;
-    uint16_t messageBufferLength;
-    uint8_t messageBufferCount;
+    uint8_t **textBuffers;
+    uint8_t textBufferIndex;
+    uint16_t textBufferLength;
+    uint8_t textBufferCount;
     u8g2_t *u8g2;
-    uint8_t bufferIndex;
-    uint8_t **buffers;
-    uint16_t bufferLength;
-    uint8_t bufferCount;
+    uint8_t **texts;
+    uint16_t textColumns;
+    uint8_t textLines;
+    uint8_t textIndex;
 } OLED_Handle;
 
-OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c, osMessageQId *messageQueue, uint16_t bufferLength, uint8_t bufferCount, uint16_t messageBufferLength, uint8_t messageBufferCount);
+OLED_Handle *OLED_Init(I2C_HandleTypeDef *hi2c, osMessageQId *messageQueue, const uint8_t *font, uint16_t textColumns, uint8_t textLines, uint16_t messageBufferLength, uint8_t messageBufferCount);
 void OLED_Open(OLED_Handle *const poled);
 void OLED_Close(OLED_Handle *const poled);
 void OLED_Clear(OLED_Handle *const poled);
