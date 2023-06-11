@@ -62,6 +62,7 @@ MOTOR_Handle *pmotorY;
 OLED_Handle *poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
+SemaphoreHandle_t testSemaphoreHandle = NULL;
 
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
@@ -108,6 +109,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_MUTEX */
   printSemaphoreHandle = xSemaphoreCreateMutex();
+  testSemaphoreHandle = xSemaphoreCreateMutex();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -226,7 +228,7 @@ void MOTOR_HandleTask()
 
 void OLED_HandleTask()
 {
-  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT, 15);
+  poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_BUFFER_SIZE, OLED_TEXT_BUFFER_COUNT, 32, 15);
   for (;;)
   {
 
@@ -241,6 +243,7 @@ void OLED_HandleTask()
     // OLED_DrawString(poled, 0, 48, str2);
     // OLED_Refresh(poled);
     OLED_MessageHandle(poled);
+    // osDelay(500);
   }
 }
 
@@ -271,7 +274,7 @@ void EnvCollection_HandleTask()
     osDelay(100);
     OLED_PushString(poled, str2);
     // OLED_Refresh(poled);
-    osDelay(1000);
+    osDelay(2000);
   }
 }
 
