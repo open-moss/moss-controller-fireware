@@ -16,7 +16,7 @@
 #define OLED_BOOL_Subtract ((uint8_t)0x02) // 减
 
 typedef enum {
-    OLED_SCENE_NORMAL = 0,  //常规
+    OLED_SCENE_DEFAULT = 0,  //默认
     OLED_SCENE_SCROLL_SCREEN = 1  //滚动屏幕
 } OLED_SceneType;
 
@@ -44,5 +44,6 @@ void OLED_PartClear(OLED_Handle *const poled, uint8_t x, uint8_t y, uint8_t widt
 void OLED_DrawString(OLED_Handle *const holed, uint8_t x, uint8_t y, uint8_t *const str);
 void OLED_PushString(OLED_Handle *const poled, uint8_t *const str);
 void OLED_MessageHandle(OLED_Handle *const poled);
+BOOL OLED_MessageQueueIsFull(OLED_Handle *const poled);
 
 #endif

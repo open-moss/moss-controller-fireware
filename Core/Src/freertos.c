@@ -263,18 +263,18 @@ void EnvCollection_HandleTask()
       osDelay(500);
       continue;
     }
-    uint8_t str1[20];
-    uint8_t str2[20];
-    memset(str1, 0, sizeof(uint8_t) * 20);
-    memset(str2, 0, sizeof(uint8_t) * 20);
+    uint8_t str1[30];
+    uint8_t str2[30];
+    memset(str1, 0, sizeof(uint8_t) * 30);
+    memset(str2, 0, sizeof(uint8_t) * 30);
     sprintf((char *)str1, "Temperature: %2.2f", measureData->temperature);
     sprintf((char *)str2, "Humidity: %2.2f", measureData->humidity);
     HumitureSensor_FreeMeasureData(measureData);
-    OLED_PushString(poled, str1);
-    osDelay(100);
-    OLED_PushString(poled, str2);
+    OLED_PushString(poled, "Temperature:\nABCDEFG");
+    // osDelay(100);
+    OLED_PushString(poled, "Temperature:\nABCDEFG");
     // OLED_Refresh(poled);
-    osDelay(2000);
+    osDelay(1000);
   }
 }
 
