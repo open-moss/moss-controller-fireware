@@ -338,7 +338,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F103xE</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;        ../Drivers/STM32F1xx_HAL_Driver/Inc;        ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;        ../Middlewares/Third_Party/FreeRTOS/Source/include;        ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;        ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;        ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;        ../Drivers/CMSIS/Include;        ../Core/Inc/vl53l1x;        ../Core/Inc/u8g2</IncludePath>
+              <IncludePath>../Core/Inc;          ../Drivers/STM32F1xx_HAL_Driver/Inc;          ../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy;          ../Middlewares/Third_Party/FreeRTOS/Source/include;          ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS;          ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM3;          ../Drivers/CMSIS/Device/ST/STM32F1xx/Include;          ../Drivers/CMSIS/Include;          ../Core/Inc/vl53l1x;          ../Core/Inc/u8g2</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -433,6 +433,16 @@
               <FilePath>..\Core\Src\device.c</FilePath>
             </File>
             <File>
+              <FileName>humiture_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\humiture_sensor.c</FilePath>
+            </File>
+            <File>
+              <FileName>shtc3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\shtc3.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -486,16 +496,6 @@
               <FileName>stm32f1xx_hal_timebase_tim.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f1xx_hal_timebase_tim.c</FilePath>
-            </File>
-            <File>
-              <FileName>humiture_sensor.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\humiture_sensor.c</FilePath>
-            </File>
-            <File>
-              <FileName>shtc3.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\shtc3.c</FilePath>
             </File>
           </Files>
         </Group>

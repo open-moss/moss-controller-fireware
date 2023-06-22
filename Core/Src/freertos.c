@@ -126,7 +126,7 @@ void MX_FREERTOS_Init(void) {
   serialDataQueueHandle = osMessageCreate(osMessageQ(serialDataQueue), NULL);
 
   /* definition and creation of oledDataQeue */
-  osMessageQDef(oledDataQeue, 15, uint32_t);
+  osMessageQDef(oledDataQeue, 10, uint32_t);
   oledDataQeueHandle = osMessageCreate(osMessageQ(oledDataQeue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
@@ -199,10 +199,12 @@ void StartMainTask(void const * argument)
 
   for (;;)
   {
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) == GPIO_PIN_SET)
-      LogInfo("FOUNDED HUMAN!!!");
+    // uint8_t data[30];
+    // HAL_UART_Receive(&huart5, data, 30, 5000);
+    // PrintHEX(data, sizeof(data));
     // PrintTaskList();
-    osDelay(1000);
+    LogInfo("Test");
+    osDelay(5000);
   }
   /* USER CODE END StartMainTask */
 }
@@ -213,8 +215,8 @@ void MOTOR_HandleTask()
 {
   pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN, X_MOTOR_LIMIT_GPIO_PORT, X_MOTOR_LIMIT_PIN);
   pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN, Y_MOTOR_LIMIT_GPIO_PORT, Y_MOTOR_LIMIT_PIN);
-  // MOTOR_Rotate(pmotorX, 360);
-  // MOTOR_Rotate(pmotorY, 360);
+  MOTOR_Rotate(pmotorX, 360);
+  MOTOR_Rotate(pmotorY, 360);
   // MOTOR_Rotate(&pmotorY, 51200 * 20);
   for (;;)
   {
@@ -255,6 +257,10 @@ void EnvCollection_HandleTask()
 {
   HumitureSensor_Handle* phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
   osDelay(500);
+  // uint8_t str1[30];
+  // sprintf((char *)str1, "Test\nHelloWorld%d", 10);
+  // OLED_PushString(poled, str1);
+  // OLED_PushString(poled, str1);
   while(1) {
     HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
     if(measureData == NULL) {
@@ -267,12 +273,12 @@ void EnvCollection_HandleTask()
     uint8_t str2[30];
     memset(str1, 0, sizeof(uint8_t) * 30);
     memset(str2, 0, sizeof(uint8_t) * 30);
-    sprintf((char *)str1, "Temperature: %2.2f", measureData->temperature);
-    sprintf((char *)str2, "Humidity: %2.2f", measureData->humidity);
+    sprintf((char *)str1, "Temperature: \n%2.2f", measureData->temperature);
+    sprintf((char *)str2, "Humidity: \n%2.2f", measureData->humidity);
     HumitureSensor_FreeMeasureData(measureData);
-    OLED_PushString(poled, "Temperature:\nABCDEFG");
+    OLED_PushString(poled, str1);
     // osDelay(100);
-    OLED_PushString(poled, "Temperature:\nABCDEFG");
+    OLED_PushString(poled, str2);
     // OLED_Refresh(poled);
     osDelay(1000);
   }

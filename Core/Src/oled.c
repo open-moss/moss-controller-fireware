@@ -9,6 +9,7 @@
 
 #define OLED_COMMAND_ADDRESS 0x00
 #define OLED_DATA_ADDRESS 0x40
+#define min(a,b) ((a) < (b) ? (a) : (b))
 
 extern SemaphoreHandle_t testSemaphoreHandle;
 
@@ -111,41 +112,54 @@ void OLED_MessageHandle(OLED_Handle *const poled) {
     osEvent event = osMessageGet(poled->messageQueue, 1000); //消息队列接收消息
     if (event.status != osEventMessage)
         return;
-    uint8_t *textBuffers = event.value.p;
-    uint16_t textBufferLength = strlen((const char*)textBuffers) * sizeof(uint8_t);
-    uint8_t chunkSize = ceil((float)textBufferLength / poled->textColumns);
-    if(chunkSize == 0) chunkSize = 1;
-    uint8_t offset = 0;
-    while(offset < chunkSize * poled->textColumns) {
-        if(poled->textIndex > poled->textLines - 1) {
-            for(uint8_t i = 0;i < poled->textLines - 1;i++) {
-                memset(poled->texts[i], 0, sizeof(uint8_t) * poled->textColumns);
-                memcpy(poled->texts[i], poled->texts[i + 1], sizeof(uint8_t) * poled->textColumns);
+    uint8_t *textBuffer = event.value.p;
+    uint16_t textBufferLength = strlen((const char*)textBuffer) * sizeof(uint8_t) + 1;
+    uint8_t buffer[textBufferLength];
+    uint16_t bufferOffset = 0;
+    memset(buffer, 0, sizeof(uint8_t) * sizeof(buffer));
+    for(uint16_t di = 0;di < textBufferLength;di++) {
+        // LogInfo("%c", textBuffer[di]);
+        if(textBuffer[di] != 0x0A && textBuffer[di] != '\0') {
+            memcpy(buffer + di - bufferOffset, textBuffer + di, sizeof(uint8_t));
+            // LogInfo("%s %d %d", textBuffer + di, di, bufferOffset);
+            continue;
+        }
+        uint16_t bufferLength = strlen((const char*)buffer) * sizeof(uint8_t);
+        bufferOffset += bufferLength + 1;
+        // LogInfo("%s %d", buffer, bufferLength);
+        uint8_t chunkSize = ceil((float)bufferLength / poled->textColumns);
+        if(chunkSize == 0) chunkSize = 1;
+        uint8_t offset = 0;
+        while(offset < chunkSize * min(bufferLength, poled->textColumns)) {
+            if(poled->textIndex > poled->textLines - 1) {
+                for(uint8_t i = 0;i < poled->textLines - 1;i++) {
+                    memset(poled->texts[i], 0, sizeof(uint8_t) * poled->textColumns);
+                    memcpy(poled->texts[i], poled->texts[i + 1], sizeof(uint8_t) * poled->textColumns);
+                }
+                poled->textIndex = poled->textLines - 1;
             }
-            poled->textIndex = poled->textLines - 1;
-        }
-        OLED_PartClear(poled, 0, 0, 128, 12);
-        for(uint8_t i = 0;i < poled->textIndex;i++) {
-            OLED_PartClear(poled, 0, i * 12 + 12, 128, 12);
-            OLED_DrawString(poled, 0, i * 12 + 12, poled->texts[i]);
-        }
-        memset(poled->texts[poled->textIndex], 0, sizeof(uint8_t) * poled->textColumns);
-        memcpy(poled->texts[poled->textIndex], textBuffers + offset, sizeof(uint8_t) * poled->textColumns);
-        uint8_t temp[poled->textColumns];
-        for(uint8_t i = 0;i < strlen((const char*)poled->texts[poled->textIndex]) - 1;i++) {
-            if(poled->texts[poled->textIndex][i] == 0x0A) {
-                continue;
+            OLED_PartClear(poled, 0, 0, 128, 12);
+            for(uint8_t i = 0;i < poled->textIndex;i++) {
+                OLED_PartClear(poled, 0, i * 12 + 12, 128, 12);
+                OLED_DrawString(poled, 0, i * 12 + 12, poled->texts[i]);
             }
-            memset(temp, 0, poled->textColumns);
-            memcpy(temp, poled->texts[poled->textIndex], i + 1);
-            OLED_PartClear(poled, 0, poled->textIndex * 12 + 12, 128, 12);
-            OLED_DrawString(poled, 0, poled->textIndex * 12 + 12, temp);
-            OLED_Refresh(poled);
-            osDelay(5);
+            memset(poled->texts[poled->textIndex], 0, sizeof(uint8_t) * poled->textColumns);
+            memcpy(poled->texts[poled->textIndex], buffer + offset, sizeof(uint8_t) * poled->textColumns);
+            uint8_t temp[poled->textColumns];
+            for(uint8_t i = 0;i < strlen((const char*)poled->texts[poled->textIndex]);i++) {
+                memset(temp, 0, poled->textColumns);
+                memcpy(temp, poled->texts[poled->textIndex], i + 1);
+                OLED_PartClear(poled, 0, poled->textIndex * 12 + 12, 128, 12);
+                OLED_DrawString(poled, 0, poled->textIndex * 12 + 12, temp);
+                OLED_Refresh(poled);
+                osDelay(5);
+            }
+            offset += min(bufferLength, poled->textColumns);
+            poled->textIndex++;
         }
-        offset += poled->textColumns;
-        poled->textIndex++;
+        memset(buffer, 0, sizeof(uint8_t) * sizeof(buffer));
     }
+    
 }
 
 BOOL OLED_MessageQueueIsFull(OLED_Handle *const poled) {

@@ -63,12 +63,16 @@ void Error_Handler(void);
 #define LASER_LIGHT_GPIO_Port GPIOC
 #define DATA_LIGHT_Pin GPIO_PIN_3
 #define DATA_LIGHT_GPIO_Port GPIOC
+#define SPI1_NSS_Pin GPIO_PIN_4
+#define SPI1_NSS_GPIO_Port GPIOA
 #define STATUS_RED_Pin GPIO_PIN_5
 #define STATUS_RED_GPIO_Port GPIOC
 #define STATUS_BLUE_Pin GPIO_PIN_0
 #define STATUS_BLUE_GPIO_Port GPIOB
 #define _850NM_LIGHT_Pin GPIO_PIN_1
 #define _850NM_LIGHT_GPIO_Port GPIOB
+#define SPI2_NSS_Pin GPIO_PIN_12
+#define SPI2_NSS_GPIO_Port GPIOB
 #define IR_38KHZ_Pin GPIO_PIN_6
 #define IR_38KHZ_GPIO_Port GPIOC
 #define M2_LIMIT_Pin GPIO_PIN_7
@@ -79,8 +83,8 @@ void Error_Handler(void);
 #define OUT_3V3_GPIO_Port GPIOC
 #define M1_LIMIT_Pin GPIO_PIN_8
 #define M1_LIMIT_GPIO_Port GPIOA
-#define BODY_SENSOR_Pin GPIO_PIN_4
-#define BODY_SENSOR_GPIO_Port GPIOB
+#define DATA_LIGHT_DT_Pin GPIO_PIN_4
+#define DATA_LIGHT_DT_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
