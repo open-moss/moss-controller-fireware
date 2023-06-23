@@ -31,6 +31,7 @@
 #include "motor.h"
 #include "oled.h"
 #include "humiture_sensor.h"
+#include "body_sensor.h"
 #include "logger.h"
 #include "messager.h"
 #include "protocol.h"
@@ -256,11 +257,7 @@ volatile int IntCount;
 void EnvCollection_HandleTask()
 {
   HumitureSensor_Handle* phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
-  osDelay(500);
-  // uint8_t str1[30];
-  // sprintf((char *)str1, "Test\nHelloWorld%d", 10);
-  // OLED_PushString(poled, str1);
-  // OLED_PushString(poled, str1);
+  BodySensor_Handle* pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART);
   while(1) {
     HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
     if(measureData == NULL) {
@@ -280,6 +277,7 @@ void EnvCollection_HandleTask()
     // osDelay(100);
     OLED_PushString(poled, str2);
     // OLED_Refresh(poled);
+    BodySensor_Measuring(pbs);
     osDelay(1000);
   }
 }

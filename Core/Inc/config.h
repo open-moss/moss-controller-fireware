@@ -84,6 +84,7 @@
 #define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小
 #define EXTENDS_SERIAL_PORT_HUART huart3  //扩展串口UART句柄
 #define EXTENDS_SERIAL_PORT_BUFFER_MAX_SIZE 128  //扩展串口缓冲区最大大小
+#define BODY_SENSOR_SERIAL_PORT_HUART huart5  //人体传感串口UART句柄
 
 /**
  * 温湿度传感配置
