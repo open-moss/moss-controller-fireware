@@ -36,11 +36,14 @@
 /**
  * OLED屏幕配置 
  */
+#define OLED_TEXT_MAX_WIDTH 128  //文本最大宽度
+#define OLED_TEXT_MAX_HEIGHT 64  //文本最大高度
 #define OLED_TEXT_FONT u8g2_font_6x12_tf  //文本应用字体
-#define OLED_TEXT_COLUMNS 21  //文本列数
-#define OLED_TEXT_LINES 5  //文本行数
-#define OLED_TEXT_BUFFER_LENGTH 64  //文本缓冲区长度
+#define OLED_TEXT_CHAR_WIDTH 6  //文本字符宽度
+#define OLED_TEXT_CHAR_HEIGHT 12  //文本字符高度
+#define OLED_TEXT_BUFFER_LENGTH 105  //文本缓冲区长度
 #define OLED_TEXT_BUFFER_COUNT 15  //文本缓冲区个数
+#define OLED_TEXT_TYPING_INTERVAL 5  //文本打字延时（毫秒）
 #define OLED_HI2C hi2c1  //I2C句柄
 #define OLED_I2C_ADDRESS 0x78  //I2C设备地址
 #define OLED_I2C_CLOCK_SPEED 400  //I2C时钟周期（KHZ）
