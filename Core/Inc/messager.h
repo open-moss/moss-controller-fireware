@@ -14,11 +14,10 @@ typedef struct {
     uint8_t index;  //数据位置指针
     uint16_t size;  //数据最大大小
     uint16_t receiveSize;  //数据接收大小
-} MESSAGE_SerialRxBuffer;
+} Messager_SerialRxBuffer;
 
 typedef struct {
     UART_HandleTypeDef* huart;
-    MESSAGE_SerialRxBuffer* rxBuffer;
     uint8_t tempBufferIndex;
     uint8_t **tempBuffers;
     uint8_t tempBufferCount;
@@ -26,6 +25,7 @@ typedef struct {
     SemaphoreHandle_t sendSemaphore;
     SemaphoreHandle_t replySemaphore;
     uint16_t waitReplyId;
+    Messager_SerialRxBuffer* rxBuffer;
     uint16_t txTimeout;
     uint16_t rxTimeout;
     BOOL rxHeadStart;

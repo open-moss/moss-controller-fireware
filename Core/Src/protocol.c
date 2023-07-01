@@ -23,8 +23,6 @@
  * [N] -> 0x0D 回车结束符
  */
 
-extern SemaphoreHandle_t testSemaphoreHandle;
-
 uint16_t Protocol_GenerateDataPacketID(void) {
     static uint16_t dataPacketId = 1;
     if(dataPacketId > 65535)
@@ -59,9 +57,10 @@ void Protocol_DataPacketSign(DataPacket* const pdata) {
 }
 
 uint8_t* Protocol_DataPacketToBuffer(DataPacket* const pdata) {
+    static uint8_t head[] = DATA_PACKET_HEAD;
     uint8_t* buffer = (uint8_t*)pvPortMalloc(sizeof(uint8_t) * DATA_PACKET_MAX_SIZE);
-    buffer[0] = DATA_PACKET_HEAD_HIGH;
-    buffer[1] = DATA_PACKET_HEAD_LOW;
+    buffer[0] = head[0];
+    buffer[1] = head[1];
     buffer[2] = pdata->type;  //数据包类型
     buffer[3] = ExtractUint8High(pdata->size);  //数据包大小高8位
     buffer[4] = ExtractUint8Low(pdata->size);  //数据包大小低8位

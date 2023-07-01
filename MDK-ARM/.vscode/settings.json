@@ -44,7 +44,8 @@
         "cstdio": "c",
         "humiture_sensor.h": "c",
         "body_sensor.h": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "iosfwd": "c"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "files.encoding": "utf8"

@@ -73,23 +73,39 @@
 #define Y_MOTOR_LIMIT_PIN GPIO_PIN_8  //限位GPIO PIN
 
 /**
- * 串口配置
+ * 上位机串口配置
  */
-#define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //上位机串口UART句柄
-#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE 128  //上位机串口缓冲区大小
-#define UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT 5  //上位机串口临时缓冲区个数
-#define UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT 2000  //上位机串口接收数据超时时间
-#define UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT 2000  //上位机串口接收数据超时时间
+#define UPPER_COMPUTER_SERIAL_PORT_HUART huart1  //串口UART句柄
+#define UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE 128  //串口缓冲区大小
+#define UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT 5  //串口临时缓冲区个数
+#define UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT 2000  //串口接收数据超时时间
+#define UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT 2000  //串口接收数据超时时间
+
+/**
+ * 调试串口配置
+ */
 #define DEBUG_SERIAL_PORT_HUART huart2  //调试串口UART句柄
 #define DEBUG_SERIAL_PORT_BUFFER_MAX_SIZE 128  //调试串口缓冲区最大大小
+
+/**
+ * 扩展串口配置
+ */
 #define EXTENDS_SERIAL_PORT_HUART huart3  //扩展串口UART句柄
 #define EXTENDS_SERIAL_PORT_BUFFER_MAX_SIZE 128  //扩展串口缓冲区最大大小
-#define BODY_SENSOR_SERIAL_PORT_HUART huart5  //人体传感串口UART句柄
+
+/**
+ * 人体感知器配置
+ */
+#define BODY_SENSOR_SERIAL_PORT_HUART huart5  //串口UART句柄
+#define BODY_SENSOR_SERIAL_PORT_RX_TIMEOUT 2000  //串口接收数据超时时间
+#define BODY_SENSOR_SERIAL_PORT_TEMP_BUFFER_COUNT 5  //串口临时缓冲区个数
 
 /**
  * 温湿度传感配置
  */
 #define HUMITURE_SENSOR_HI2C hi2c2  //I2C句柄
 #define HUMITURE_SENSOR_I2C_ADDRESS 0x07  //I2C设备地址
+
+
 
 #endif

@@ -18,8 +18,8 @@ void Messager_RxBufferClear(Messager_Handle *const pmgr);
 
 Messager_Handle *Messager_Init(UART_HandleTypeDef *huart, osMessageQId *messageQueue, uint16_t rxBufferSize, uint8_t tempBufferCount, uint16_t txTimeout, uint16_t rxTimeout)
 {
-    MESSAGE_SerialRxBuffer *rxBuffer = pvPortMalloc(sizeof(MESSAGE_SerialRxBuffer));
-    memset(rxBuffer, 0, sizeof(MESSAGE_SerialRxBuffer));
+    Messager_SerialRxBuffer *rxBuffer = pvPortMalloc(sizeof(Messager_SerialRxBuffer));
+    memset(rxBuffer, 0, sizeof(Messager_SerialRxBuffer));
     rxBuffer->data = (uint8_t *)pvPortMalloc(sizeof(uint8_t) * rxBufferSize);
     memset(rxBuffer->data, 0, sizeof(uint8_t) * rxBufferSize);
     rxBuffer->temp = (uint8_t *)pvPortMalloc(sizeof(uint8_t));
@@ -74,7 +74,7 @@ HAL_StatusTypeDef Messager_Listen(Messager_Handle *const pmgr)
 }
 
 void Messager_MessageHandle(Messager_Handle *const pmgr) {
-    osEvent event = osMessageGet(pmgr->messageQueue, 1000); //消息队列接收消息
+    osEvent event = osMessageGet(pmgr->messageQueue, 200); //消息队列接收消息
     if (event.status != osEventMessage)
         return;
     DataPacket *pdata = Protocol_BufferToDataPacket(event.value.p);
@@ -83,7 +83,7 @@ void Messager_MessageHandle(Messager_Handle *const pmgr) {
         xSemaphoreGive(pmgr->replySemaphore);
     }
     Protocol_PrintDataPacket(pdata);
-    OLED_PushString(poled, pdata->body);
+    // OLED_PushString(poled, pdata->body);
     Protocol_FreeDataPacket(pdata);
 }
 
@@ -140,7 +140,7 @@ void Messager_RxBufferClear(Messager_Handle *const pmgr)
     pmgr->rxBuffer->index = 0;
 }
 
-uint8_t* MESSAGE_GetTempBufferPoint(Messager_Handle *const pmgr) {
+uint8_t* Messager_GetTempBufferPoint(Messager_Handle *const pmgr) {
     if(pmgr->tempBufferIndex >= pmgr->tempBufferCount)
         pmgr->tempBufferIndex = 0;
     memset(pmgr->tempBuffers[pmgr->tempBufferIndex], 0, sizeof(uint8_t) * pmgr->rxBuffer->size);
@@ -154,18 +154,24 @@ void Messager_TxCpltCallback(Messager_Handle *const pmgr)
 
 void Messager_RxCpltCallback(Messager_Handle *const pmgr)
 {
+    static uint8_t head[] = DATA_PACKET_HEAD;
+    static uint8_t headIndex = 0;
     uint32_t startTime = SYS_TIME; // 接收开始时间
-    MESSAGE_SerialRxBuffer *rxBuffer = pmgr->rxBuffer;
+    Messager_SerialRxBuffer *rxBuffer = pmgr->rxBuffer;
     uint8_t c = rxBuffer->temp[0]; // 接收的字符
-    if(pmgr->rxHeadStart && rxBuffer->index == 1 && c != DATA_PACKET_HEAD_LOW) {
-        pmgr->rxHeadStart = FALSE;
-        Messager_RxBufferClear(pmgr);
+    if(!pmgr->rxHeadStart) {
+        if(c == head[headIndex])
+            headIndex++;
+        else
+            headIndex = 0;
+        if(headIndex == sizeof(head) / sizeof(uint8_t) - 1) {
+            headIndex = 0;
+            pmgr->rxHeadStart = TRUE;
+            Messager_RxBufferClear(pmgr);
+        }
+        rxBuffer->data[rxBuffer->index++] = c;
     }
-    if(!pmgr->rxHeadStart && c == DATA_PACKET_HEAD_HIGH) {
-        pmgr->rxHeadStart = TRUE;
-        Messager_RxBufferClear(pmgr);
-    }
-    if (pmgr->rxHeadStart && c == 0x0D && rxBuffer->data[0] != 0x00)
+    else if (c == 0x0D && rxBuffer->data[0] != 0x00)
     {
         if (rxBuffer->receiveSize == 0 && rxBuffer->index + 1 >= 5) {
             rxBuffer->receiveSize = MergeToUint16(rxBuffer->data[3], rxBuffer->data[4]); // 从包头获取数据大小
@@ -175,7 +181,7 @@ void Messager_RxCpltCallback(Messager_Handle *const pmgr)
         else if (rxBuffer->index + 1 >= DATA_PACKET_MIN_SIZE)
         {
             rxBuffer->data[rxBuffer->index++] = c;
-            uint8_t *tempBuffer = MESSAGE_GetTempBufferPoint(pmgr);
+            uint8_t *tempBuffer = Messager_GetTempBufferPoint(pmgr);
             memcpy(tempBuffer, rxBuffer->data, rxBuffer->size);
             pmgr->rxHeadStart = FALSE;
             Messager_RxBufferClear(pmgr);

@@ -66,12 +66,12 @@ BodySensor_Handle* pbs;
 OLED_Handle *poled;
 
 SemaphoreHandle_t printSemaphoreHandle = NULL;
-SemaphoreHandle_t testSemaphoreHandle = NULL;
 
 /* USER CODE END Variables */
 osThreadId mainLoopWorkerHandle;
 osMessageQId serialDataQueueHandle;
 osMessageQId oledDataQeueHandle;
+osMessageQId bodySensorDataQueueHandle;
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
@@ -113,7 +113,6 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_MUTEX */
   printSemaphoreHandle = xSemaphoreCreateMutex();
-  testSemaphoreHandle = xSemaphoreCreateMutex();
   /* USER CODE END RTOS_MUTEX */
 
   /* USER CODE BEGIN RTOS_SEMAPHORES */
@@ -132,6 +131,10 @@ void MX_FREERTOS_Init(void) {
   /* definition and creation of oledDataQeue */
   osMessageQDef(oledDataQeue, 10, uint32_t);
   oledDataQeueHandle = osMessageCreate(osMessageQ(oledDataQeue), NULL);
+
+  /* definition and creation of bodySensorDataQueue */
+  osMessageQDef(bodySensorDataQueue, 10, uint32_t);
+  bodySensorDataQueueHandle = osMessageCreate(osMessageQ(bodySensorDataQueue), NULL);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -187,7 +190,7 @@ void StartMainTask(void const * argument)
   LogInfo("Motor Handle Task Created");  
 
   //创建激光测距处理任务
-  while (CreateTask("EnvCollection_HandleTask", EnvCollection_HandleTask, osPriorityBelowNormal, 768) != HAL_OK)
+  while (CreateTask("EnvCollection_HandleTask", EnvCollection_HandleTask, osPriorityIdle, 768) != HAL_OK)
   {
     LogInfo("EnvCollection Handle Task Create Failed");
     osDelay(100);
@@ -228,14 +231,14 @@ void MOTOR_HandleTask()
       LogInfo("X MOTOR LIMIT!");
     if (MOTOR_LimitCheck(pmotorY))
       LogInfo("Y MOTOR LIMIT!");
-    if(MOTOR_GetRotateAngle(pmotorX) >= 360)
-      MOTOR_Rotate(pmotorX, -10);
-    else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
-      MOTOR_Rotate(pmotorX, 370);
-    if(MOTOR_GetRotateAngle(pmotorY) >= 360)
-      MOTOR_Rotate(pmotorY, -10);
-    else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
-      MOTOR_Rotate(pmotorY, 370);
+    // if(MOTOR_GetRotateAngle(pmotorX) >= 360)
+    //   MOTOR_Rotate(pmotorX, -10);
+    // else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
+    //   MOTOR_Rotate(pmotorX, 370);
+    // if(MOTOR_GetRotateAngle(pmotorY) >= 360)
+    //   MOTOR_Rotate(pmotorY, -10);
+    // else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
+    //   MOTOR_Rotate(pmotorY, 370);
     osDelay(500);
   }
 }
@@ -268,7 +271,9 @@ volatile int IntCount;
 void EnvCollection_HandleTask()
 {
   phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
-  pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART);
+  pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART, bodySensorDataQueueHandle, BODY_SENSOR_SERIAL_PORT_TEMP_BUFFER_COUNT, BODY_SENSOR_SERIAL_PORT_RX_TIMEOUT);
+  //if (BodySensor_Listen(pbs) != HAL_OK)
+  //  LogError("BodySensor Listen Failed");
   while(1) {
     HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
     if(measureData == NULL) {
@@ -288,7 +293,7 @@ void EnvCollection_HandleTask()
     // osDelay(100);
     OLED_PushString(poled, str2);
     // OLED_Refresh(poled);
-    BodySensor_Measuring(pbs);
+    // BodySensor_Measuring(pbs);
     osDelay(1000);
   }
 }

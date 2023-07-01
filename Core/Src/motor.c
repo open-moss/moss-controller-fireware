@@ -30,7 +30,6 @@ MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t
 
 HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor) {
     uint32_t iparams = generateIParams(pmotor->irun * 10, pmotor->ihold * 10, pmotor->iholdDelay);
-    LogInfo("%d", iparams);
     MOTOR_SendCommand(pmotor, TMC5160_CHOPCONF, 0x000100C3);
     MOTOR_SendCommand(pmotor, TMC5160_IHOLD_IRUN, iparams);
     MOTOR_SendCommand(pmotor, TMC5160_TPOWERDOWN, 0x0000000A);
