@@ -55,10 +55,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-MESSAGER_Handle *pmgr;
+Messager_Handle *pmgr;
 
 MOTOR_Handle *pmotorX;
 MOTOR_Handle *pmotorY;
+
+HumitureSensor_Handle* phs;
+BodySensor_Handle* pbs;
 
 OLED_Handle *poled;
 
@@ -204,8 +207,9 @@ void StartMainTask(void const * argument)
     // HAL_UART_Receive(&huart5, data, 30, 5000);
     // PrintHEX(data, sizeof(data));
     // PrintTaskList();
-    LogInfo("Test");
+    // LogInfo("Test");
     osDelay(5000);
+    OLED_PushString(poled, "HelloWorld");
   }
   /* USER CODE END StartMainTask */
 }
@@ -214,10 +218,9 @@ void StartMainTask(void const * argument)
 /* USER CODE BEGIN Application */
 void MOTOR_HandleTask()
 {
-  pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN, X_MOTOR_LIMIT_GPIO_PORT, X_MOTOR_LIMIT_PIN);
-  pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN, Y_MOTOR_LIMIT_GPIO_PORT, Y_MOTOR_LIMIT_PIN);
-  MOTOR_Rotate(pmotorX, 360);
-  MOTOR_Rotate(pmotorY, 360);
+  pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN, X_MOTOR_LIMIT_GPIO_PORT, X_MOTOR_LIMIT_PIN, X_MOTOR_IRUN, X_MOTOR_IHOLD, X_MOTOR_IHOLDDELAY);
+  pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN, Y_MOTOR_LIMIT_GPIO_PORT, Y_MOTOR_LIMIT_PIN, Y_MOTOR_IRUN, Y_MOTOR_IHOLD, Y_MOTOR_IHOLDDELAY);
+
   // MOTOR_Rotate(&pmotorY, 51200 * 20);
   for (;;)
   {
@@ -225,6 +228,14 @@ void MOTOR_HandleTask()
       LogInfo("X MOTOR LIMIT!");
     if (MOTOR_LimitCheck(pmotorY))
       LogInfo("Y MOTOR LIMIT!");
+    if(MOTOR_GetRotateAngle(pmotorX) >= 360)
+      MOTOR_Rotate(pmotorX, -10);
+    else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
+      MOTOR_Rotate(pmotorX, 370);
+    if(MOTOR_GetRotateAngle(pmotorY) >= 360)
+      MOTOR_Rotate(pmotorY, -10);
+    else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
+      MOTOR_Rotate(pmotorY, 370);
     osDelay(500);
   }
 }
@@ -256,8 +267,8 @@ volatile int IntCount;
 
 void EnvCollection_HandleTask()
 {
-  HumitureSensor_Handle* phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
-  BodySensor_Handle* pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART);
+  phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
+  pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART);
   while(1) {
     HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
     if(measureData == NULL) {
@@ -270,8 +281,8 @@ void EnvCollection_HandleTask()
     uint8_t str2[30];
     memset(str1, 0, sizeof(uint8_t) * 30);
     memset(str2, 0, sizeof(uint8_t) * 30);
-    sprintf((char *)str1, "Temperature: \n%2.2f", measureData->temperature);
-    sprintf((char *)str2, "Humidity: \n%2.2f", measureData->humidity);
+    sprintf((char *)str1, "Temperature: %2.2f", measureData->temperature);
+    sprintf((char *)str2, "Humidity: %2.2f", measureData->humidity);
     HumitureSensor_FreeMeasureData(measureData);
     OLED_PushString(poled, str1);
     // osDelay(100);
@@ -284,11 +295,11 @@ void EnvCollection_HandleTask()
 
 void Message_HandleTask()
 {
-  pmgr = MESSAGER_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
-  if (MESSAGER_Listen(pmgr) != HAL_OK)
+  pmgr = Messager_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
+  if (Messager_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
   while (1) {
-    MESSAGER_MessageHandle(pmgr);
+    Messager_MessageHandle(pmgr);
     // osDelay(100);
   }
 }
@@ -296,14 +307,15 @@ void Message_HandleTask()
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   if (huart->Instance == pmgr->huart->Instance)
-    MESSAGER_TxCpltCallback(pmgr);
+    Messager_TxCpltCallback(pmgr);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  // LogInfoISR("callback");
   if (huart->Instance == pmgr->huart->Instance)
-    MESSAGER_RxCpltCallback(pmgr);
+    Messager_RxCpltCallback(pmgr);
+  if (huart->Instance == pbs->huart->Instance)
+    BodySensor_RxCpltCallback(pbs);
 }
 /* USER CODE END Application */
 

@@ -10,9 +10,12 @@ typedef struct {
     uint16_t csPIN;
     GPIO_TypeDef* limitGPIO;
     uint16_t limitPIN;
+    float ihold;
+    float irun;
+    float iholdDelay;
 } MOTOR_Handle;
 
-MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN);
+MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN, float irun, float ihold, float iholdDelay);
 HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const hmotor);
 HAL_StatusTypeDef MOTOR_Rotate(MOTOR_Handle* const hmotor, int16_t angle);
 int16_t MOTOR_GetRotateAngle(MOTOR_Handle* const hmotor);

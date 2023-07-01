@@ -51,8 +51,8 @@
 /**
  * X轴电机配置
  */
-#define X_MOTOR_IHOLD 1.2  //静止电流
-#define X_MOTOR_IRUN 1.7  //最大电流
+#define X_MOTOR_IHOLD 0.3  //静止电流（A）不能超过步进电机额定电流
+#define X_MOTOR_IRUN 0.3  //最大电流（A）不能超过步进电机额定电流
 #define X_MOTOR_IHOLDDELAY 6  //降电流延时周期数 0-15
 #define X_MOTOR_HSPI hspi2  //SPI句柄
 #define X_MOTOR_CS_GPIO_PORT GPIOB  //片选GPIO
@@ -63,8 +63,8 @@
 /**
  * Y轴电机配置
  */
-#define Y_MOTOR_IHOLD 1.2  //静止电流
-#define Y_MOTOR_IRUN 1.7  //最大电流
+#define Y_MOTOR_IHOLD 0.3  //静止电流（A）不能超过步进电机额定电流
+#define Y_MOTOR_IRUN 0.3  //最大电流（A）不能超过步进电机额定电流
 #define Y_MOTOR_IHOLDDELAY 6  //降电流延时周期数 0-15
 #define Y_MOTOR_HSPI hspi1  //SPI句柄
 #define Y_MOTOR_CS_GPIO_PORT GPIOA  //片选GPIO

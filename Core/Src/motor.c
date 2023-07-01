@@ -6,12 +6,14 @@
 #include "common.h"
 #include "tmc5160.h"
 #include "motor.h"
+#include "logger.h"
 
 HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor);
 HAL_StatusTypeDef MOTOR_SendCommand(MOTOR_Handle* const pmotor, uint8_t address, uint32_t data);
 int32_t MOTOR_ReadData(MOTOR_Handle* const pmotor, uint8_t address);
+uint32_t generateIParams(uint8_t irun, uint8_t ihold, uint32_t iholdDelay);
 
-MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN) {
+MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN, float irun, float ihold, float iholdDelay) {
     MOTOR_Handle* pmotor = pvPortMalloc(sizeof(MOTOR_Handle));
     memset(pmotor, 0, sizeof(MOTOR_Handle));
     pmotor->hspi = hspi;
@@ -19,13 +21,18 @@ MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t
     pmotor->csPIN = csPIN;
     pmotor->limitGPIO = limitGPIO;
     pmotor->limitPIN = limitPIN;
+    pmotor->irun = irun;
+    pmotor->ihold = ihold;
+    pmotor->iholdDelay = iholdDelay;
     MOTOR_Reset(pmotor);
     return pmotor;
 }
 
 HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor) {
+    uint32_t iparams = generateIParams(pmotor->irun * 10, pmotor->ihold * 10, pmotor->iholdDelay);
+    LogInfo("%d", iparams);
     MOTOR_SendCommand(pmotor, TMC5160_CHOPCONF, 0x000100C3);
-    MOTOR_SendCommand(pmotor, TMC5160_IHOLD_IRUN, 0x00060303);
+    MOTOR_SendCommand(pmotor, TMC5160_IHOLD_IRUN, iparams);
     MOTOR_SendCommand(pmotor, TMC5160_TPOWERDOWN, 0x0000000A);
     MOTOR_SendCommand(pmotor, TMC5160_GCONF, 0x00000004);
     MOTOR_SendCommand(pmotor, TMC5160_TPWMTHRS, 0x000001F4);
@@ -79,6 +86,20 @@ int32_t MOTOR_ReadData(MOTOR_Handle* const pmotor, uint8_t address) {
 	HAL_GPIO_WritePin(pmotor->csGPIO, pmotor->csPIN, GPIO_PIN_SET);
     int32_t ret = (rxBuffer[1] << 24) | (rxBuffer[2] << 16) | (rxBuffer[3] << 8) | rxBuffer[4];
     return ret;
+}
+
+uint32_t generateIParams(uint8_t irun, uint8_t ihold, uint32_t iholdDelay) {
+	uint8_t data[6];
+	data[0] = (iholdDelay >> 24) & 0xFF;
+	data[1] = (iholdDelay >> 16) & 0xFF;
+	data[2] = (iholdDelay >> 8) & 0xFF;
+	data[3] = iholdDelay & 0xFF;
+	data[4] = irun;
+	data[5] = ihold;
+    uint32_t iparams = 0;
+    for (uint8_t i = 0; i < 6; i++)
+        iparams = (iparams << 8) | (data[i] & 0xFF);
+    return iparams;
 }
 
 void MOTOR_Free(MOTOR_Handle* pmotor) {
