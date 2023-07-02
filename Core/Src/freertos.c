@@ -213,10 +213,8 @@ void MOTOR_HandleTask()
   while (1)
   {
 
-    if(MOTOR_GetRotateAngle(pmotorX) <= 0)
-      MOTOR_Rotate(pmotorX, 51200);
-    if(MOTOR_GetRotateAngle(pmotorY) <= 0)
-      MOTOR_Rotate(pmotorY, 51200);
+    MOTOR_Rotate(pmotorX, 30000);
+    MOTOR_Rotate(pmotorY, 30000);
 
     osDelay(500);
   }
