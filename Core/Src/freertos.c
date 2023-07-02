@@ -189,7 +189,7 @@ void StartMainTask(void const * argument)
   }
   LogInfo("Motor Handle Task Created");  
 
-  //创建激光测距处理任务
+  //创建环境采集处理任务
   while (CreateTask("EnvCollection_HandleTask", EnvCollection_HandleTask, osPriorityIdle, 768) != HAL_OK)
   {
     LogInfo("EnvCollection Handle Task Create Failed");
@@ -199,20 +199,9 @@ void StartMainTask(void const * argument)
 
   Device_DatalightOpen();  //初始化完毕后开启数据灯
 
-  // DataPacket *pdata = Protocol_BuildDataPacket(DATA_PACKET_HEARTBEAT, "123456", sizeof("123456"));
-  // DataPacket *pdata1 = Protocol_BufferToDataPacket(Protocol_DataPacketToBuffer(pdata));
-  // PrintHEX(Protocol_DataPacketToBuffer(pdata1), pdata->size);
-
-
   for (;;)
   {
-    // uint8_t data[30];
-    // HAL_UART_Receive(&huart5, data, 30, 5000);
-    // PrintHEX(data, sizeof(data));
-    // PrintTaskList();
-    // LogInfo("Test");
-    osDelay(5000);
-    OLED_PushString(poled, "HelloWorld");
+    osDelay(2000);
   }
   /* USER CODE END StartMainTask */
 }
@@ -231,14 +220,14 @@ void MOTOR_HandleTask()
       LogInfo("X MOTOR LIMIT!");
     if (MOTOR_LimitCheck(pmotorY))
       LogInfo("Y MOTOR LIMIT!");
-    // if(MOTOR_GetRotateAngle(pmotorX) >= 360)
-    //   MOTOR_Rotate(pmotorX, -10);
-    // else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
-    //   MOTOR_Rotate(pmotorX, 370);
-    // if(MOTOR_GetRotateAngle(pmotorY) >= 360)
-    //   MOTOR_Rotate(pmotorY, -10);
-    // else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
-    //   MOTOR_Rotate(pmotorY, 370);
+    if(MOTOR_GetRotateAngle(pmotorX) >= 360)
+      MOTOR_Rotate(pmotorX, -10);
+    else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
+      MOTOR_Rotate(pmotorX, 370);
+    if(MOTOR_GetRotateAngle(pmotorY) >= 360)
+      MOTOR_Rotate(pmotorY, -10);
+    else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
+      MOTOR_Rotate(pmotorY, 370);
     osDelay(500);
   }
 }
@@ -272,11 +261,11 @@ void EnvCollection_HandleTask()
 {
   phs = HumitureSensor_Init(&HUMITURE_SENSOR_HI2C);
   pbs = BodySensor_Init(&BODY_SENSOR_SERIAL_PORT_HUART, bodySensorDataQueueHandle, BODY_SENSOR_SERIAL_PORT_TEMP_BUFFER_COUNT, BODY_SENSOR_SERIAL_PORT_RX_TIMEOUT);
-  //if (BodySensor_Listen(pbs) != HAL_OK)
-  //  LogError("BodySensor Listen Failed");
+  if (BodySensor_Listen(pbs) != HAL_OK)
+    LogError("BodySensor Listen Failed");
   while(1) {
-    HumitureSensor_MeasureData *measureData = HumitureSensor_Measuring(phs);
-    if(measureData == NULL) {
+    HumitureSensor_MeasureData *humitureSensorMeasureData = HumitureSensor_Measuring(phs);
+    if(humitureSensorMeasureData == NULL) {
       LogWarn("HumitureSensor Measuring Failed");
       HumitureSensor_Reset(phs);
       osDelay(500);
@@ -286,14 +275,13 @@ void EnvCollection_HandleTask()
     uint8_t str2[30];
     memset(str1, 0, sizeof(uint8_t) * 30);
     memset(str2, 0, sizeof(uint8_t) * 30);
-    sprintf((char *)str1, "Temperature: %2.2f", measureData->temperature);
-    sprintf((char *)str2, "Humidity: %2.2f", measureData->humidity);
-    HumitureSensor_FreeMeasureData(measureData);
+    sprintf((char *)str1, "Temperature: %2.2f", humitureSensorMeasureData->temperature);
+    sprintf((char *)str2, "Humidity: %2.2f", humitureSensorMeasureData->humidity);
+    HumitureSensor_FreeMeasureData(humitureSensorMeasureData);
     OLED_PushString(poled, str1);
-    // osDelay(100);
     OLED_PushString(poled, str2);
-    // OLED_Refresh(poled);
-    // BodySensor_Measuring(pbs);
+    BodySensor_MeasureData *bodySensorMeasureData = BodySensor_Measuring(pbs);
+    BodySensor_FreeMeasureData(bodySensorMeasureData);
     osDelay(1000);
   }
 }
@@ -303,10 +291,8 @@ void Message_HandleTask()
   pmgr = Messager_Init(&UPPER_COMPUTER_SERIAL_PORT_HUART, serialDataQueueHandle, UPPER_COMPUTER_SERIAL_PORT_BUFFER_SIZE, UPPER_COMPUTER_SERIAL_PORT_TEMP_BUFFER_COUNT, UPPER_COMPUTER_SERIAL_PORT_TX_TIMEOUT, UPPER_COMPUTER_SERIAL_PORT_RX_TIMEOUT);
   if (Messager_Listen(pmgr) != HAL_OK)
     LogError("Messager Listen Failed");
-  while (1) {
+  while (1)
     Messager_MessageHandle(pmgr);
-    // osDelay(100);
-  }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)

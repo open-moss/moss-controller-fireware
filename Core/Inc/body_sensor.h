@@ -30,13 +30,14 @@ typedef struct {
     int16_t x;
     int16_t y;
     int16_t speed;
-    uint16_t distance;
-} BodySensor_BodyData;
+    int16_t distance;
+    BOOL exists;
+} BodySensor_Target;
 
 typedef struct {
-    BodySensor_BodyData *body1;
-    BodySensor_BodyData *body2;
-    BodySensor_BodyData *body3;
+    BodySensor_Target *target1;
+    BodySensor_Target *target2;
+    BodySensor_Target *target3;
 } BodySensor_MeasureData;
 
 BodySensor_Handle* BodySensor_Init(UART_HandleTypeDef* huart, osMessageQId *messageQueue, uint8_t tempBufferCount, uint16_t rxTimeout);

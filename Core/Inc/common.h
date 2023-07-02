@@ -9,6 +9,7 @@ uint32_t GetSystemSecondsTime(void);
 uint8_t ExtractUint8High(uint16_t data);
 uint8_t ExtractUint8Low(uint16_t data);
 uint16_t MergeToUint16(uint8_t high, uint8_t low);
+int16_t MergeToInt16(int8_t high, int8_t low);
 void Uint16ToUint8Array(uint16_t data, uint8_t* pdata);
 
 #define FALSE 0

@@ -67,6 +67,10 @@ uint16_t MergeToUint16(uint8_t high, uint8_t low) {
     return (high << 8) | low;
 }
 
+int16_t MergeToInt16(int8_t high, int8_t low) {
+    return (high << 8) | low;
+}
+
 void Uint16ToUint8Array(uint16_t data, uint8_t* pdata) {
     static uint8_t temp[2];
     temp[0] = ExtractUint8High(data);
