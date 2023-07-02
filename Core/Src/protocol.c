@@ -100,6 +100,7 @@ void Protocol_FreeBuffer(uint8_t* const buffer) {
 }
 
 void Protocol_FreeDataPacket(DataPacket* pdata) {
+    if(pdata == NULL) return;
     vPortFree(pdata->body);
     pdata->body = NULL;
     vPortFree(pdata->sign);

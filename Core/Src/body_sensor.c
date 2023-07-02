@@ -157,8 +157,13 @@ void BodySensor_RxCpltCallback(BodySensor_Handle *pbs) {
 }
 
 void BodySensor_FreeMeasureData(BodySensor_MeasureData *measureData) {
+    if(measureData == NULL) return;
     vPortFree(measureData->target1);
+    measureData->target1 = NULL;
     vPortFree(measureData->target2);
+    measureData->target2 = NULL;
     vPortFree(measureData->target3);
+    measureData->target3 = NULL;
     vPortFree(measureData);
+    measureData = NULL;
 }

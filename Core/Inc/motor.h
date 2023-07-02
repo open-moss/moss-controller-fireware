@@ -13,6 +13,7 @@ typedef struct {
     float ihold;
     float irun;
     float iholdDelay;
+    BOOL stopped;
 } MOTOR_Handle;
 
 MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t csPIN, GPIO_TypeDef* limitGPIO, uint16_t limitPIN, float irun, float ihold, float iholdDelay);

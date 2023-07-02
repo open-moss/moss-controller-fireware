@@ -199,10 +199,8 @@ void StartMainTask(void const * argument)
 
   Device_DatalightOpen();  //初始化完毕后开启数据灯
 
-  for (;;)
-  {
+  while (1)
     osDelay(2000);
-  }
   /* USER CODE END StartMainTask */
 }
 
@@ -212,22 +210,14 @@ void MOTOR_HandleTask()
 {
   pmotorX = MOTOR_Init(&X_MOTOR_HSPI, X_MOTOR_CS_GPIO_PORT, X_MOTOR_CS_PIN, X_MOTOR_LIMIT_GPIO_PORT, X_MOTOR_LIMIT_PIN, X_MOTOR_IRUN, X_MOTOR_IHOLD, X_MOTOR_IHOLDDELAY);
   pmotorY = MOTOR_Init(&Y_MOTOR_HSPI, Y_MOTOR_CS_GPIO_PORT, Y_MOTOR_CS_PIN, Y_MOTOR_LIMIT_GPIO_PORT, Y_MOTOR_LIMIT_PIN, Y_MOTOR_IRUN, Y_MOTOR_IHOLD, Y_MOTOR_IHOLDDELAY);
-
-  // MOTOR_Rotate(&pmotorY, 51200 * 20);
-  for (;;)
+  while (1)
   {
-    if (MOTOR_LimitCheck(pmotorX))
-      LogInfo("X MOTOR LIMIT!");
-    if (MOTOR_LimitCheck(pmotorY))
-      LogInfo("Y MOTOR LIMIT!");
-    if(MOTOR_GetRotateAngle(pmotorX) >= 360)
-      MOTOR_Rotate(pmotorX, -10);
-    else if(MOTOR_GetRotateAngle(pmotorX) <= 0)
-      MOTOR_Rotate(pmotorX, 370);
-    if(MOTOR_GetRotateAngle(pmotorY) >= 360)
-      MOTOR_Rotate(pmotorY, -10);
-    else if(MOTOR_GetRotateAngle(pmotorY) <= 0)
-      MOTOR_Rotate(pmotorY, 370);
+
+    if(MOTOR_GetRotateAngle(pmotorX) <= 0)
+      MOTOR_Rotate(pmotorX, 51200);
+    if(MOTOR_GetRotateAngle(pmotorY) <= 0)
+      MOTOR_Rotate(pmotorY, 51200);
+
     osDelay(500);
   }
 }
@@ -235,22 +225,8 @@ void MOTOR_HandleTask()
 void OLED_HandleTask()
 {
   poled = OLED_Init(&OLED_HI2C, oledDataQeueHandle, OLED_TEXT_FONT, OLED_TEXT_MAX_WIDTH, OLED_TEXT_MAX_HEIGHT, OLED_TEXT_CHAR_WIDTH, OLED_TEXT_CHAR_HEIGHT, OLED_TEXT_BUFFER_LENGTH, OLED_TEXT_BUFFER_COUNT, OLED_TEXT_TYPING_INTERVAL);
-  for (;;)
-  {
-
-    // OLED_PartClear(poled, 0, 24, 128, 24);
-    // uint8_t str1[20];
-    // uint8_t str2[20];
-    // memset(str1, 0, sizeof(uint8_t) * 20);
-    // memset(str2, 0, sizeof(uint8_t) * 20);
-    // sprintf((char *)str1, "X MOTOR: %d", MOTOR_GetRotateAngle(pmotorX));
-    // sprintf((char *)str2, "Y MOTOR: %d", MOTOR_GetRotateAngle(pmotorY));
-    // OLED_DrawString(poled, 0, 36, str1);
-    // OLED_DrawString(poled, 0, 48, str2);
-    // OLED_Refresh(poled);
+  while (1)
     OLED_MessageHandle(poled);
-    // osDelay(500);
-  }
 }
 
 volatile int IntCount;

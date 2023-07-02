@@ -24,5 +24,7 @@ HAL_StatusTypeDef HumitureSensor_Reset(HumitureSensor_Handle *phs) {
 }
 
 void HumitureSensor_FreeMeasureData(HumitureSensor_MeasureData *measureData) {
+    if(measureData == NULL) return;
     vPortFree(measureData);
+    measureData = NULL;
 }

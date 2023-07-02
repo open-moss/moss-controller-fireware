@@ -24,6 +24,7 @@ MOTOR_Handle* MOTOR_Init(SPI_HandleTypeDef* hspi, GPIO_TypeDef* csGPIO, uint16_t
     pmotor->irun = irun;
     pmotor->ihold = ihold;
     pmotor->iholdDelay = iholdDelay;
+    pmotor->stopped = FALSE;
     MOTOR_Reset(pmotor);
     return pmotor;
 }
@@ -33,7 +34,7 @@ HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor) {
     MOTOR_SendCommand(pmotor, TMC5160_CHOPCONF, 0x000100C3);
     MOTOR_SendCommand(pmotor, TMC5160_IHOLD_IRUN, iparams);
     MOTOR_SendCommand(pmotor, TMC5160_TPOWERDOWN, 0x0000000A);
-    MOTOR_SendCommand(pmotor, TMC5160_GCONF, 0x00000004);
+    MOTOR_SendCommand(pmotor, TMC5160_GCONF, 0x00);
     MOTOR_SendCommand(pmotor, TMC5160_TPWMTHRS, 0x000001F4);
     MOTOR_SendCommand(pmotor, TMC5160_A1, 100);
     MOTOR_SendCommand(pmotor, TMC5160_V1, 500);
@@ -48,6 +49,10 @@ HAL_StatusTypeDef MOTOR_Reset(MOTOR_Handle* const pmotor) {
 }
 
 HAL_StatusTypeDef MOTOR_Rotate(MOTOR_Handle* const pmotor, int16_t angle) {
+    if(MOTOR_LimitCheck(pmotor))
+        MOTOR_SendCommand(pmotor, TMC5160_SWMODE, 0xF);
+    else
+        MOTOR_SendCommand(pmotor, TMC5160_SWMODE, 0);
     return MOTOR_SendCommand(pmotor, TMC5160_XTARGET, (int32_t)ceil(142.2 * angle));
 }
 
@@ -56,8 +61,11 @@ int16_t MOTOR_GetRotateAngle(MOTOR_Handle* const pmotor) {
 }
 
 BOOL MOTOR_LimitCheck(MOTOR_Handle* const pmotor) {
-    if(HAL_GPIO_ReadPin(pmotor->limitGPIO, pmotor->limitPIN) == GPIO_PIN_RESET)
+    if(HAL_GPIO_ReadPin(pmotor->limitGPIO, pmotor->limitPIN) == GPIO_PIN_RESET) {
+        pmotor->stopped = TRUE;
         return TRUE;
+    }
+    pmotor->stopped = FALSE;
     return FALSE;
 }
 
